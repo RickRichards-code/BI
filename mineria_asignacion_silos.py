@@ -72,16 +72,16 @@ def main():
         raise SystemExit('Falta PuLP: pip install pulp')
     L, S = len(lotes), len(silos)
     prob = pulp.LpProblem('silos', pulp.LpMinimize)
-    x = pulp.LpVariable.dicts('x', (range(L), range(S)), cat='Binary')
-    prob += pulp.lpSum(costo[l, s] * x[l][s] for l in range(L) for s in range(S))
+    x = {(l, s): pulp.LpVariable(f'x_{l}_{s}', cat='Binary') for l in range(L) for s in range(S)}
+    prob += pulp.lpSum(costo[l, s] * x[l, s] for l in range(L) for s in range(S))
     for l in range(L):
-        prob += pulp.lpSum(x[l][s] for s in range(S)) == 1
+        prob += pulp.lpSum(x[l, s] for s in range(S)) == 1
     cap = silos['libre_tn'].values
     for s in range(S):
-        prob += pulp.lpSum(lotes['peso_neto'].values[l] * x[l][s] for l in range(L)) <= cap[s]
+        prob += pulp.lpSum(lotes['peso_neto'].values[l] * x[l, s] for l in range(L)) <= cap[s]
     prob.solve(pulp.PULP_CBC_CMD(msg=0))
     print('Estado:', pulp.LpStatus[prob.status])
-    asig = np.array([[int(pulp.value(x[l][s])) for s in range(S)] for l in range(L)])
+    asig = np.array([[int(pulp.value(x[l, s])) for s in range(S)] for l in range(L)])
     lotes['silo_optimo'] = (asig * silos['id_silo'].values[None, :]).sum(axis=1)
     opt = float((costo * asig).sum())
     # Baseline con EL MISMO factor silo del silo realmente usado (comparacion justa)
