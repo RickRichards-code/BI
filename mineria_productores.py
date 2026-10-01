@@ -17,11 +17,16 @@ FEATS = ['n_recepciones', 'volumen_total_tn', 'ticket_medio_tn', 'merma_total_tn
          'impurezas_media', 'impurezas_std', 'impurezas_max', 'pct_imp_crit',
          'proteina_media', 'aceite_media', 'pct_descuento', 'max_merma_evento']
 def cargar():
+    pwd = os.getenv('SNOWFLAKE_PASSWORD', '').strip().strip('\'"')
+    if not pwd:
+        print('SNOWFLAKE_PASSWORD vacia: uso CSV local')
+        print("Define: export SNOWFLAKE_PASSWORD='tu_clave' (comillas simples por el !)")
+        return pd.read_csv('data/productores_features_v2.csv')
     try:
         import snowflake.connector
-        kwargs = dict(user=os.getenv('SNOWFLAKE_USER', 'ENRRIQUE'), password=os.environ['SNOWFLAKE_PASSWORD'],
+        kwargs = dict(user=os.getenv('SNOWFLAKE_USER', 'ENRRIQUE'), password=pwd,
             account=os.getenv('SNOWFLAKE_ACCOUNT', 'AVBVHGL-WZ57062'),
-            database='AIRBYTE_DATABASE', warehouse='COMPUTE_WH')
+            database='AIRBYTE_DATABASE', warehouse='COMPUTE_WH', login_timeout=30)
         if os.getenv('SNOWFLAKE_ROLE'):
             kwargs['role'] = os.getenv('SNOWFLAKE_ROLE')
         c = snowflake.connector.connect(**kwargs)
@@ -30,8 +35,9 @@ def cargar():
         df = pd.DataFrame(cur.fetchall(), columns=[d[0] for d in cur.description])
         print('Origen: Snowflake en vivo'); return df
     except Exception as e:
-        print(f'Snowflake no disponible ({type(e).__name__}): uso CSV local')
-        return pd.read_csv('data/productores_features_v2.csv')
+        print(f'FALLO Snowflake con password definida ({type(e).__name__}): {e}')
+        print('Revisa: comillas simples en export, SNOWFLAKE_ACCOUNT=AVBVHGL-WZ57062, red saliente a Snowflake.')
+        raise SystemExit(1)
 def main():
     df = cargar()
     df.columns = df.columns.str.lower()
