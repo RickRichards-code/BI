@@ -72,7 +72,14 @@ def main():
         raise SystemExit('Falta PuLP: pip install pulp')
     L, S = len(lotes), len(silos)
     prob = pulp.LpProblem('silos', pulp.LpMinimize)
-    x = {(l, s): pulp.LpVariable(f'x_{l}_{s}', cat='Binary') for l in range(L) for s in range(S)}
+    def _bvar(name):
+        try:
+            return pulp.LpVariable(name, cat='Binary')
+        except TypeError:  # PuLP muy antiguo: sin kwargs
+            v = pulp.LpVariable(name)
+            v.lowBound, v.upBound, v.cat = 0, 1, 'Binary'
+            return v
+    x = {(l, s): _bvar(f'x_{l}_{s}') for l in range(L) for s in range(S)}
     prob += pulp.lpSum(costo[l, s] * x[l, s] for l in range(L) for s in range(S))
     for l in range(L):
         prob += pulp.lpSum(x[l, s] for s in range(S)) == 1
