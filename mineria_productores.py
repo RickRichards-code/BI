@@ -19,10 +19,12 @@ FEATS = ['n_recepciones', 'volumen_total_tn', 'ticket_medio_tn', 'merma_total_tn
 def cargar():
     try:
         import snowflake.connector
-        c = snowflake.connector.connect(
-            user=os.getenv('SNOWFLAKE_USER', 'ENRRIQUE'), password=os.environ['SNOWFLAKE_PASSWORD'],
+        kwargs = dict(user=os.getenv('SNOWFLAKE_USER', 'ENRRIQUE'), password=os.environ['SNOWFLAKE_PASSWORD'],
             account=os.getenv('SNOWFLAKE_ACCOUNT', 'AVBVHGL-WZ57062'),
             database='AIRBYTE_DATABASE', warehouse='COMPUTE_WH')
+        if os.getenv('SNOWFLAKE_ROLE'):
+            kwargs['role'] = os.getenv('SNOWFLAKE_ROLE')
+        c = snowflake.connector.connect(**kwargs)
         q = open('sql/productores_features.sql', encoding='utf-8').read()
         cur = c.cursor(); cur.execute(q)
         df = pd.DataFrame(cur.fetchall(), columns=[d[0] for d in cur.description])
