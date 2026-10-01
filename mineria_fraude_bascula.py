@@ -70,10 +70,12 @@ def main():
     df['es_madrugada'] = ((df['hora_dec'] < 5) | (df['hora_dec'] > 23)).astype(float)
     df['es_domingo'] = (df['fecha_hora'].dt.dayofweek == 6).astype(float)
     df['dup_remision'] = df.duplicated('numero_remision', keep=False).astype(float)
-    # Reglas duras -> 100 directo
-    hard_doc = ((df['dup_remision'] == 1) | df['id_contrato'].isna()).astype(float)
     yr = df['fecha_hora'].dt.year
-    hard_doc = ((hard_doc == 1) | yr.lt(2000) | yr.gt(2027)).astype(float)  # fechas absurdas
+    df['s_dup'] = df['dup_remision'] * 0.6
+    df['s_date'] = ((yr.lt(2000) | yr.gt(2027))).astype(float) * 0.6
+    print(f"diag: dup_remision={df['dup_remision'].mean():.1%} contrato_null={df['id_contrato'].isna().mean():.1%} fecha_rara={df['s_date'].mean():.1%}")
+    # Reglas duras -> 100 directo (solo combinaciones graves o fisica imposible)
+    hard_doc = ((df['dup_remision'] == 1) & (df['s_date'] > 0) & df['id_contrato'].isna()).astype(float)
     hard_fis = ((df['peso_neto'] <= 0) | (df['tara_tn'] > df['peso_bruto_tn']) | (df['peso_neto'] > 200)).astype(float)
     # z robusto por silo-mes (fisica)
     g = df.groupby(['id_silo', df['fecha_hora'].dt.strftime('%Y-%m')])
@@ -103,9 +105,10 @@ def main():
         cum = df.groupby('id_contrato')['peso_neto'].cumsum()
         comp = df['volumen_comprometido_tn'].replace(0, np.nan)
         df['s_contrato'] = ((cum / comp) - 1).clip(lower=0).fillna(0).clip(0, 1)
-        df['s_contrato'] += df['id_contrato'].isna().astype(float) * 0.5
+        df['s_contrato'] += (df['id_contrato'].isna() & (df['peso_neto'] > 50)).astype(float) * 0.3
+        df['s_contrato'] += (df['id_contrato'].isna() & (df['peso_neto'] <= 50)).astype(float) * 0.1
     else:
-        df['s_contrato'] = df['id_contrato'].isna().astype(float) * 0.5
+        df['s_contrato'] = df['id_contrato'].isna().astype(float) * 0.2
         print('(muestra: sobre-entrega desactivada)')
     # Laboratorio ausente con calidad premium declarada
     df['s_lab'] = ((df['n_lab'] == 0)).astype(float) * 0.4
@@ -126,18 +129,22 @@ def main():
     Xs = StandardScaler().fit_transform(Xm)
     iso = IsolationForest(n_estimators=100, max_samples=256, contamination=0.02, random_state=SEED, n_jobs=-1).fit(Xs)
     df['s_iso'] = ((0 - iso.score_samples(Xs)) / 0.5).clip(0, 1)
-    # Score 0-100
+    # Score 0-100 (DOCUMENTAL aporta como familia puntuada, no solo hard)
+    df['s_doc'] = df[['s_contrato', 's_dup', 's_date']].max(axis=1)
     df['score'] = (15 * df['s_benford'] + 25 * df['s_iso'] + 15 * df['s_rend'] + 10 * df['s_contrato']
-                   + 5 * df['s_lab'] + 10 * df['s_hora'] + 15 * df['s_fisica'] + 5 * df['z_peso_neto'].clip(0, 6) / 6)
+                   + 5 * df['s_lab'] + 10 * df['s_hora'] + 15 * df['s_fisica'] + 5 * df['z_peso_neto'].clip(0, 6) / 6
+                   + 10 * df['s_doc']) / 1.1
     df.loc[hard_doc == 1, 'score'] = 100.0
     df.loc[hard_fis == 1, 'score'] = 100.0
     df['score'] = df['score'].clip(0, 100).round(1)
-    fam = {'FISICA': df['s_fisica'], 'DOCUMENTAL': df[['s_contrato']].max(axis=1),
+    fam = {'FISICA': df['s_fisica'], 'DOCUMENTAL': df['s_doc'],
            'RENDIMIENTO': df['s_rend'], 'ESTADISTICA': df[['s_benford', 's_iso']].max(axis=1), 'HORARIO': df['s_hora']}
     df['tipologia'] = pd.DataFrame(fam).idxmax(axis=1)
     df.loc[hard_doc == 1, 'tipologia'] = 'DOCUMENTAL'
     df.loc[hard_fis == 1, 'tipologia'] = 'FISICA'
-    df['severidad'] = pd.cut(df['score'], [-0.1, 25, 50, 75, 100.1], labels=['bajo', 'medio', 'alto', 'critico'])
+    q99, q90, q50 = df['score'].quantile([0.99, 0.90, 0.50])
+    print(f'cortes percentil: critico>={q99:.1f} alto>={q90:.1f} medio>={q50:.1f}')
+    df['severidad'] = pd.cut(df['score'], [-0.1, q50, q90, q99, 100.1], labels=['bajo', 'medio', 'alto', 'critico'])
     print('=== TIPOLOGIAS ==='); print(df['tipologia'].value_counts().to_string())
     print('=== SEVERIDAD ==='); print(df['severidad'].value_counts().to_string())
     top = df.nlargest(20, 'score')[['id_recepcion', 'fecha_hora', 'id_silo', 'id_contrato', 'peso_neto', 'score', 'tipologia', 'severidad']]
