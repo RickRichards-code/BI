@@ -26,19 +26,19 @@ def _cargar_local(cols):
     import snowflake.connector
     pwd = os.getenv('SNOWFLAKE_PASSWORD', '').strip().strip('\'"')
     if not pwd:
-            raise SystemExit("Sin password: export SNOWFLAKE_PASSWORD='clave'")
-        kw = dict(user=os.getenv('SNOWFLAKE_USER', 'ENRIQUE'), password=pwd,
-                  account=os.getenv('SNOWFLAKE_ACCOUNT', 'WMNAMCT-LN60692'),
-                  database=os.getenv('SNOWFLAKE_DB', 'ARQUI1'),
-                  schema=os.getenv('SNOWFLAKE_SCHEMA', 'CAPA_BRONCE'),
-                  warehouse=os.getenv('SNOWFLAKE_WH', 'COMPUTE_WH'), login_timeout=60)
-        if os.getenv('SNOWFLAKE_ROLE'):
-            kw['role'] = os.getenv('SNOWFLAKE_ROLE')
-        c = snowflake.connector.connect(**kw)
-        cur = c.cursor(); cur.execute(f"SELECT {', '.join(cols)} FROM CALIDAD_RECEPCIONES")
-        import pandas as pd
-        print('Origen: connector local')
-        return pd.DataFrame(cur.fetchall(), columns=[d[0] for d in cur.description]), None
+        raise SystemExit("Sin password: export SNOWFLAKE_PASSWORD='clave'")
+    kw = dict(user=os.getenv('SNOWFLAKE_USER', 'ENRIQUE'), password=pwd,
+              account=os.getenv('SNOWFLAKE_ACCOUNT', 'WMNAMCT-LN60692'),
+              database=os.getenv('SNOWFLAKE_DB', 'ARQUI1'),
+              schema=os.getenv('SNOWFLAKE_SCHEMA', 'CAPA_BRONCE'),
+              warehouse=os.getenv('SNOWFLAKE_WH', 'COMPUTE_WH'), login_timeout=60)
+    if os.getenv('SNOWFLAKE_ROLE'):
+        kw['role'] = os.getenv('SNOWFLAKE_ROLE')
+    c = snowflake.connector.connect(**kw)
+    cur = c.cursor(); cur.execute(f"SELECT {', '.join(cols)} FROM CALIDAD_RECEPCIONES")
+    import pandas as pd
+    print('Origen: connector local')
+    return pd.DataFrame(cur.fetchall(), columns=[d[0] for d in cur.description]), None
 def main():
     import numpy as np
     import pandas as pd
