@@ -14,14 +14,18 @@ def cargar():
     cols = NUM + CAT + ['SPLIT', 'OBJETIVO_CALIDAD', 'ID_RECEPCION']
     try:
         from snowflake.snowpark.context import get_active_session
-        session = get_active_session()
-        print('Origen: sesion Snowflake (Snowpark)')
-        df = session.sql(f"SELECT {', '.join(cols)} FROM CALIDAD_RECEPCIONES").to_pandas()
-        return df, session
-    except Exception:
-        import snowflake.connector
-        pwd = os.getenv('SNOWFLAKE_PASSWORD', '').strip().strip('\'"')
-        if not pwd:
+    except ImportError:
+        return _cargar_local(cols)  # fuera de Snowflake: aqui si pide credenciales
+    session = get_active_session()  # dentro de Snowflake: SIN credenciales
+    print('Origen: sesion Snowflake (Snowpark), sin credenciales')
+    df = session.sql(f"SELECT {', '.join(cols)} FROM ARQUI1.CAPA_BRONCE.CALIDAD_RECEPCIONES").to_pandas()
+    return df, session
+
+
+def _cargar_local(cols):
+    import snowflake.connector
+    pwd = os.getenv('SNOWFLAKE_PASSWORD', '').strip().strip('\'"')
+    if not pwd:
             raise SystemExit("Sin password: export SNOWFLAKE_PASSWORD='clave'")
         kw = dict(user=os.getenv('SNOWFLAKE_USER', 'ENRIQUE'), password=pwd,
                   account=os.getenv('SNOWFLAKE_ACCOUNT', 'WMNAMCT-LN60692'),
