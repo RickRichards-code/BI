@@ -5,8 +5,8 @@ PROYECTO 1 v2 | Pronostico de precios de soya (grano / aceite / harina) y margen
 ========================================================================================
 v2 conserva TODA la complejidad del original y corrige: (1) random_state en todos los
 modelos estocasticos (replicabilidad entre maquinas); (2) class_weight='balanced' en
-clasificadores (LATERAL domina 50-70%); (3) ARIMA de validacion protegido con try/except
-(antes un fallo ahi tumbaba la corrida); (4) intervalos conformales calibrados con el
+clasificadores (LATERAL domina 50-70%); (3) sin ARIMA: 100% ML (Naive/Media solo referencias);
+(4) intervalos conformales calibrados con el
 modelo REAJUSTADO sobre validacion (antes usaban residuos del modelo solo-train);
 (5) Diebold-Mariano con correccion de Holm por familia (objetivo,h); (6) calibracion
 isotonic/sigmoid del campeon clasificador con Brier/LogLoss antes/despues;
@@ -368,36 +368,6 @@ def modelos_clf():
             M.pop(k)
     return M
 
-# ----------------------------------------------------------------------------- ARIMA
-def _limpiar(z):
-    return pd.Series(z).ffill().bfill().values.astype(float)
-
-
-def elegir_orden_arima(z, fit_end):
-    from statsmodels.tsa.arima.model import ARIMA
-    best = (np.inf, (1, 1, 1))
-    for p in range(3):
-        for q in range(3):
-            try:
-                r = ARIMA(z[:fit_end + 1], order=(p, 1, q)).fit()
-                if r.aic < best[0]:
-                    best = (r.aic, (p, 1, q))
-            except Exception:
-                pass
-    return best[1]
-
-
-def arima_cambio(z, order, fit_end, origenes, h):
-    """Pronostico del cambio a h meses desde cada origen, con parametros fijos ajustados hasta fit_end."""
-    from statsmodels.tsa.arima.model import ARIMA
-    res = ARIMA(z[:fit_end + 1], order=order).fit()
-    out = np.empty(len(origenes))
-    for i, t in enumerate(origenes):
-        rr = res.apply(z[:t + 1], refit=False)
-        out[i] = np.asarray(rr.forecast(h))[-1] - z[t]
-    return out
-
-
 # ----------------------------------------------------------------------------- METRICAS
 def dm_test(y, e, h):
     """Diebold-Mariano (con correccion de Harvey) contra el random walk. p pequeno => modelo != RW."""
@@ -502,7 +472,7 @@ def granger_enso(d):
     return g
 
 # ----------------------------------------------------------------------------- NUCLEO REGRESION
-def evaluar_regresion(tname, h, d, X, cols, lvl, kind, M, order, acum):
+def evaluar_regresion(tname, h, d, X, cols, lvl, kind, M, acum):
     Xv = X.values.astype(float)
     N = len(Xv)
     chg = cambio_futuro(lvl, kind, h)
@@ -512,7 +482,6 @@ def evaluar_regresion(tname, h, d, X, cols, lvl, kind, M, order, acum):
         print(f'  [!] pocos datos para {tname} h={h} (train={len(tr)}, val={len(va)}, test={len(te)}); se omite')
         return None
     base = lvl.values.astype(float)
-    z = _limpiar(np.log(base) if kind == 'logret' else base)
     banner(f'REGRESION | objetivo={tname} | horizonte={h} m | cambio={"log-retorno" if kind == "logret" else "diferencia (USD/t)"}'
            f' | train={len(tr)} val={len(va)} test={len(te)} (purga {h} m)', '-')
     print(f'Fechas: train {d.index[tr[0]].date()}->{d.index[tr[-1]].date()} | val {d.index[va[0]].date()}->'
@@ -528,13 +497,6 @@ def evaluar_regresion(tname, h, d, X, cols, lvl, kind, M, order, acum):
         except Exception as ex:
             print(f'  [!] {nm} fallo en validacion: {ex}')
     pv['Naive_RW'] = np.zeros(len(va))
-    pv['ARIMA'] = None
-    if order is not None:
-        try:
-            pv['ARIMA'] = arima_cambio(z, order, tr[-1], va, h)
-        except Exception as ex:
-            print(f'  [!] ARIMA fallo en validacion (se excluye): {ex}')
-            del pv['ARIMA']
     mae = lambda k, idx, P: float(np.mean(np.abs(chg[idx] - P[k])))
     rank = sorted([k for k in pv if k not in ('Naive_RW', 'Media_hist') and pv[k] is not None],
                   key=lambda k: mae(k, va, pv))
@@ -550,12 +512,6 @@ def evaluar_regresion(tname, h, d, X, cols, lvl, kind, M, order, acum):
             pt[nm] = clone(M[nm]).fit(Xv[tv], chg[tv]).predict(Xv[te])
         except Exception as ex:
             print(f'  [!] {nm} fallo en test: {ex}')
-    if 'ARIMA' in pv:
-        try:
-            pt['ARIMA'] = arima_cambio(z, order, tv[-1], te, h)
-        except Exception as ex:
-            print(f'  [!] ARIMA fallo en test (se excluye): {ex}')
-            del pt['ARIMA']
     top_ok = [k for k in top if k in pt]
     pt['Ens_top3'] = np.mean([pt[k] for k in top_ok], axis=0)
 
@@ -586,14 +542,14 @@ def evaluar_regresion(tname, h, d, X, cols, lvl, kind, M, order, acum):
         if champ in M:
             m_refit = clone(M[champ]).fit(Xv[tv], chg[tv])
             res_cal = chg[va] - m_refit.predict(Xv[va])
-        else:  # ARIMA o Ensamble: no hay objeto reentrenable; usa sus residuos de validacion
+        else:  # Ensamble: no hay objeto reentrenable; usa sus residuos de validacion
             res_cal = chg[va] - pv[champ]
-            q = float(np.quantile(np.abs(res_cal), min(1.0, (1 - ALPHA) * (1 + 1 / len(va)))))
-            lo, hi = pt[champ] - q, pt[champ] + q
-            cobertura = float(np.mean((chg[te] >= lo) & (chg[te] <= hi)) * 100)
-            ancho = float(np.mean(base[te] * (np.exp(hi) - np.exp(lo)))) if kind == 'logret' else float(np.mean(hi - lo))
-            print(f'Intervalo conformal {int((1 - ALPHA) * 100)}% (calibrado con refit): q={q:.4f} | '
-                  f'cobertura real en test={cobertura:.1f}% | ancho medio={ancho:,.2f} USD')
+        q = float(np.quantile(np.abs(res_cal), min(1.0, (1 - ALPHA) * (1 + 1 / len(va)))))
+        lo, hi = pt[champ] - q, pt[champ] + q
+        cobertura = float(np.mean((chg[te] >= lo) & (chg[te] <= hi)) * 100)
+        ancho = float(np.mean(base[te] * (np.exp(hi) - np.exp(lo)))) if kind == 'logret' else float(np.mean(hi - lo))
+        print(f'Intervalo conformal {int((1 - ALPHA) * 100)}% (calibrado con refit): q={q:.4f} | '
+              f'cobertura real en test={cobertura:.1f}% | ancho medio={ancho:,.2f} USD')
     except Exception as ex:
         print(f'  [!] conformal fallo: {ex}')
 
@@ -647,10 +603,7 @@ def evaluar_regresion(tname, h, d, X, cols, lvl, kind, M, order, acum):
         miembros = top_ok if champ == 'Ens_top3' else [champ]
         preds = []
         for k in miembros:
-            if k == 'ARIMA':
-                preds.append(arima_cambio(z, order, ult, [ult], h)[0])
-            else:
-                preds.append(float(clone(M[k]).fit(Xv[valid], chg[valid]).predict(Xv[ult:ult + 1])[0]))
+            preds.append(float(clone(M[k]).fit(Xv[valid], chg[valid]).predict(Xv[ult:ult + 1])[0]))
         pc = float(np.mean(preds))
         p0 = float(base[ult])
         if kind == 'logret':
@@ -783,26 +736,15 @@ def main():
     granger = granger_enso(d)
 
     M, MC = modelos_reg(), modelos_clf()
-    arima_ok = True
     try:
-        import statsmodels  # noqa: F401
+        import statsmodels  # noqa: F401 (solo para Granger; no hay modelos ARIMA)
     except Exception:
-        arima_ok = False
-        print('\n[!] statsmodels no disponible: se omite ARIMA y Granger')
+        print('\n[!] statsmodels no disponible: se omite Granger')
     acum = dict(reg=[], clf=[], camp=[], campclf=[], imp=[], grupos=[], enso=[], pron=[])
-    fit_end0 = int(len(d) * FRAC_TRAIN)
     for tname in targets:
         lvl, kind = serie_objetivo(d, tname)
-        order = None
-        if arima_ok:
-            try:
-                z0 = _limpiar(np.log(lvl.values) if kind == 'logret' else lvl.values)
-                order = elegir_orden_arima(z0, fit_end0)
-                print(f'\nARIMA {tname}: orden elegido por AIC en train = {order}')
-            except Exception as ex:
-                print(f'[!] ARIMA no disponible para {tname}: {ex}')
         for h in HORIZONTES:
-            ctx = evaluar_regresion(tname, h, d, X, cols, lvl, kind, M, order, acum)
+            ctx = evaluar_regresion(tname, h, d, X, cols, lvl, kind, M, acum)
             if ctx is not None:
                 evaluar_clasificacion(tname, h, X, cols, ctx, MC, acum)
 
