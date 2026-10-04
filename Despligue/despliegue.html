@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Despliegue · Régimen del crush (RF)</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#f7fafc;color:#263238}
+.wrap{max-width:980px;margin:0 auto;padding:22px}
+.hero{background:linear-gradient(135deg,#153c5a,#00a7c6);color:#fff;border-radius:16px;padding:26px 28px}
+.hero h1{font-size:1.35rem;text-transform:uppercase}
+.hero p{font-size:.82rem;opacity:.92;margin-top:6px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.card{background:#fff;border:1px solid #dbe6ef;border-top:5px solid #153c5a;border-radius:12px;padding:14px}
+.card.warn{border-top-color:#d97008}
+.card h3{font-size:.82rem;color:#153c5a;text-transform:uppercase;margin-bottom:8px}
+.card p,.card li{font-size:.74rem;line-height:1.5;color:#455a64}
+.card ul{padding-left:16px}
+table{width:100%;border-collapse:collapse;font-size:.72rem;background:#fff;margin-top:8px}
+th{background:#153c5a;color:#fff;padding:6px}td{padding:6px;border:1px solid #dbe6ef;text-align:center}
+tr:nth-child(even){background:#f6f9fc}
+pre{background:#263238;color:#8fd6e3;font-size:.68rem;padding:12px;border-radius:10px;overflow-x:auto;margin-top:8px}
+.badge{display:inline-block;background:#e9f7fb;color:#153c5a;border:1px solid #ccecf4;border-radius:14px;padding:3px 10px;font-size:.68rem;font-weight:800}
+.alert{background:#fff4e8;border-left:4px solid #d97008;padding:10px 12px;border-radius:6px;font-size:.74rem;margin-top:12px}
+code{background:#eef2f5;padding:1px 6px;border-radius:4px;font-size:.72rem}
+@media(max-width:700px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <h1>Régimen del crush · modelo en producción</h1>
+    <p>RandomForest (300 árboles, mediana + balanceo) · 134 variables · salida binaria: <b>1 = ALTO</b> (margen sobre su mediana 36m) / <b>0 = BAJO</b> · archivo: <code>modelo_regimen_crush.joblib</code> (sklearn 1.8.0)</p>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h3>Regla operativa mensual</h3>
+      <ol style="font-size:.74rem;color:#455a64;padding-left:16px;line-height:1.6">
+        <li>Actualizar <code>PRECIOS_ENSO_MENSUAL</code> con el mes cerrado.</li>
+        <li>Recalcular las 134 features (mismo código de entrenamiento).</li>
+        <li>Predecir P(ALTO). <b>Umbral 0.52–0.59</b> (optimizado en validación).</li>
+        <li>Si P ≥ umbral → régimen ALTO: comprar grano / vender producto / cubrir.</li>
+        <li>Registrar la decisión y el resultado para el monitoreo.</li>
+      </ol>
+    </div>
+    <div class="card warn">
+      <h3>Veredicto honesto (test)</h3>
+      <p>h=1: 76% = persistencia (el modelo la copia). h=3: −2pp bajo persistencia. h=6/12: pierde por 10–18pp. <b>El modelo NO supera a "repetir el régimen actual"</b>; úsalo como segunda opinión cuantificada, no como orden automática.</p>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    <h3>Variables de entrada (134, por grupo)</h3>
+    <table>
+      <thead><tr><th>Grupo</th><th>Ejemplo</th></tr></thead>
+      <tbody>
+        <tr><td>Retornos y volatilidad (8 commodities × ~11)</td><td>soya_grano__ret_1m, maiz__vol_12m, petroleo__z_24m</td></tr>
+        <tr><td>Ratios entre commodities (21)</td><td>rat__harina_grano, rat__aceite_petroleo_z24</td></tr>
+        <tr><td>Crush (13)</td><td>crush__spread, crush__pct_rank60, crush__d6pct</td></tr>
+        <tr><td>ENSO (10)</td><td>enso__anom, enso__media3/6, fases niño/niña</td></tr>
+        <tr><td>Régimen actual (6)</td><td>reg__estado_actual, reg__gap_med, reg__x_z36</td></tr>
+        <tr><td>Estacionalidad (2)</td><td>est__mes_sin, est__mes_cos</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    <h3>Scoring en Python (misma versión: sklearn 1.8.0)</h3>
+<pre>import joblib
+m = joblib.load('modelo_regimen_crush.joblib')
+# X: DataFrame con las 134 columnas en orden (ver lista arriba)
+p = m.predict_proba(X)[:, 1]   # P(regimen ALTO)
+decision = (p >= 0.55).astype(int)</pre>
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    <h3>Monitoreo y reentrenamiento</h3>
+    <ul>
+      <li><b>Cada mes:</b> comparar acierto vs persistencia en ventana móvil de 12 meses.</li>
+      <li><b>Reentrenar si:</b> accuracy &lt; 60% dos meses seguidos, o cambio de esquema en Bronce.</li>
+      <li><b>Ojo versiones:</b> el .joblib es sklearn 1.8.0 — cargarlo en 1.9+ da warning y puede variar.</li>
+      <li><b>Riesgos conocidos:</b> fechas 1990/2099 fuera de rango, ventas 2025 contaminadas, contrato 1 basura.</li>
+    </ul>
+  </div>
+
+  <div class="alert"><b>Nota metodológica:</b> umbral y selección hechos solo con validación; el bloque test nunca se usó para elegir. Repetir este protocolo en cada reentrenamiento.</div>
+</div>
+</body>
+</html>
