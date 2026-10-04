@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gravetal Bolivia · Informe final del modelo de fletes (16 páginas)</title>
+<style>
+:root{--p:#153C5A;--s:#00A7C6;--a:#D97008;--bg:#F7FAFC;--fg:#263238;--muf:#5B6B76;--bd:#DBE6EF;--ok:#15803D;--r:#C62828}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--fg);font-size:15px;line-height:1.6}
+.wrap{max-width:900px;margin:0 auto;padding:20px}
+.page{background:#fff;border:1px solid var(--bd);border-top:6px solid var(--p);border-radius:12px;padding:28px;margin-bottom:16px}
+.page.amber{border-top-color:var(--a)}
+.pageno{font-size:.7rem;color:var(--muf);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+h1{font-size:1.7rem;color:var(--p);margin-bottom:8px}
+h2{font-size:1.15rem;color:var(--p);margin:14px 0 8px;border-bottom:2px solid var(--bd);padding-bottom:4px}
+h3{font-size:.95rem;color:var(--p);margin:12px 0 6px}
+p,li{font-size:.85rem;color:var(--fg)}
+ul,ol{padding-left:20px;margin:6px 0}
+.muted{color:var(--muf);font-size:.78rem}
+table{width:100%;border-collapse:collapse;font-size:.76rem;margin:10px 0}
+th{background:var(--p);color:#fff;padding:7px}td{padding:7px;border:1px solid var(--bd);text-align:center}
+tr:nth-child(even){background:#F2F7FC}
+.kpi{display:inline-block;background:#EAF6FB;border:1px solid var(--bd);border-radius:10px;padding:8px 16px;margin:4px;font-size:1.05rem;font-weight:800;color:var(--p)}
+.badge{display:inline-block;background:#EAF6FB;border:1px solid var(--bd);border-radius:14px;padding:2px 10px;font-size:.68rem;font-weight:800;color:var(--p)}
+.ok{color:var(--ok);font-weight:700}.bad{color:var(--r);font-weight:700}
+pre{background:#263238;color:#8FD6E3;font-size:.7rem;padding:12px;border-radius:10px;overflow-x:auto;margin:8px 0}
+code{background:#EEF2F5;padding:1px 6px;border-radius:4px;font-size:.78rem}
+svg.chart{width:100%;height:auto;display:block;margin:8px 0}
+.btn{background:var(--p);color:#fff;border:0;border-radius:10px;padding:12px 24px;font-weight:700;cursor:pointer;font-size:.85rem}
+@media print{.wrap{max-width:100%;padding:0}.page{border-radius:0;margin:0;page-break-after:always}.noprint{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<p class="noprint"><button class="btn" onclick="window.print()">Imprimir / guardar PDF (16 páginas)</button></p>
+
+<!-- P1 PORTADA -->
+<section class="page">
+<p class="pageno">Página 1 de 16 · Portada</p>
+<h1>Cotización inteligente de fletes de exportación</h1>
+<p><b>Informe final del proyecto de Machine Learning · Gravetal Bolivia</b></p>
+<p class="muted">Metodología CRISP-DM · Modelo Ridge en producción · Snowflake + Python + App offline</p>
+<p style="margin-top:12px"><span class="kpi">R² 0.905</span><span class="kpi">MAE $26.55</span><span class="kpi">MAPE 16%</span></p>
+<table><tbody>
+<tr><td><b>Empresa</b></td><td>Gravetal Bolivia (agroindustria, soya)</td></tr>
+<tr><td><b>Problema</b></td><td>Regresión: predecir costo_flete_usd por envío</td></tr>
+<tr><td><b>Datos</b></td><td>20.000 envíos · Snowflake WMNAMCT-LN60692 / ARQUI1.CAPA_BRONCE (ENVIO + TRANSPORTE)</td></tr>
+<tr><td><b>Modelo</b></td><td>Ridge α=0.1 · scikit-learn 1.8.0 · réplica exacta en navegador 5/5</td></tr>
+<tr><td><b>Despliegue</b></td><td>Despligue/app_flete.html (offline) + modelo_flete_web.json</td></tr>
+<tr><td><b>Fecha / versión</b></td><td>Octubre 2026 · v1 · rama mineria</td></tr>
+</tbody></table>
+<p class="muted">Autores: equipo ML Gravetal · Evaluación según PDF de criterios (CRISP-DM 1–6 + 11 criterios del programa Python).</p>
+</section>
+
+<!-- P2 INDICE -->
+<section class="page">
+<p class="pageno">Página 2 de 16 · Índice y control documental</p>
+<h2>Índice</h2>
+<ol>
+<li>Comprensión del negocio (CRISP-DM 1)</li>
+<li>Comprensión de los datos y dataset (CRISP-DM 2 · Criterio 1)</li>
+<li>Análisis de variables (Criterio 11)</li>
+<li>Preparación de datos: train / test (CRISP-DM 3 · Criterios 2–3)</li>
+<li>Modelado (CRISP-DM 4 · Criterio 5)</li>
+<li>Validación (Criterio 9)</li>
+<li>Evaluación: métricas y resultados (CRISP-DM 5 · Criterios 4 y 7)</li>
+<li>Visualizaciones (Criterio 8)</li>
+<li>Importancia para el negocio (Criterio 6)</li>
+<li>Conexión de datos en la nube (Criterio 10)</li>
+<li>Despliegue (CRISP-DM 6)</li>
+<li>Monitoreo y mantenimiento (CRISP-DM 6)</li>
+<li>Conclusiones, limitaciones y trabajo futuro</li>
+<li>Anexos: réplica, cuarentena, glosario</li>
+</ol>
+<h3>Control de versiones</h3>
+<table><thead><tr><th>Versión</th><th>Fecha</th><th>Cambio</th></tr></thead><tbody>
+<tr><td>v1</td><td>Oct-2026</td><td>Informe inicial: Ridge α=0.1, MAE $26.55, R² 0.905, app offline verificada 5/5</td></tr>
+</tbody></table>
+</section>
+
+<!-- P3 RESUMEN -->
+<section class="page amber">
+<p class="pageno">Página 3 de 16 · Resumen ejecutivo</p>
+<h2>Resumen ejecutivo</h2>
+<p>Gravetal exporta harina y aceite de soya; el flete representa una fracción decisiva del margen. Cotizar mal un embarque cuesta cientos de dólares por error. Este proyecto convierte 20.000 envíos históricos en un <b>cotizador supervisado</b> que predice el costo de flete con <b>MAE $26.55 y R² 0.905</b>, 74% mejor que el baseline de la media.</p>
+<ul>
+<li><b>Qué se entrega:</b> modelo Ridge verificado + app HTML offline con predicción individual, lotes CSV, dashboards y monitoreo de deriva.</li>
+<li><b>Cómo se garantiza:</b> split cronológico 70/15/15, validación temporal 3 folds, réplica bit a bit JS vs sklearn (5/5, diff &lt;0.01).</li>
+<li><b>Valor:</b> cotización en segundos con banda ±1 MAE para negociar; alerta de re-entrenamiento si el MAE mensual supera $35 o la deriva supera 15%.</li>
+<li><b>Honestidad:</b> se documentan artefactos sintéticos en cuarentena (contrato 1, ventas 2025, fechas 1990/2099) y frentes nulos (ej. calidad de grano AUC≈0.5) para no contaminar decisiones.</li>
+</ul>
+</section>
+
+<!-- P4 NEGOCIO -->
+<section class="page">
+<p class="pageno">Página 4 de 16 · CRISP-DM 1</p>
+<h2>1. Comprensión del negocio</h2>
+<h3>Objetivo general</h3>
+<p>Reducir el error de cotización de fletes de exportación para proteger el margen del crush (≈80 USD/TN) y acelerar la respuesta comercial.</p>
+<h3>Traducción a minería de datos</h3>
+<p>Problema de <b>regresión supervisada</b>: predecir <code>costo_flete_usd</code> (continua, &gt;0) a partir de 8 features de ruta, equipo y mes. Métrica técnica principal: <b>MAE</b> (dólares interpretables); secundaria: <b>R²</b> (varianza explicada) y <b>MAPE</b> (error relativo).</p>
+<h3>Criterios de éxito</h3>
+<table><thead><tr><th>Dimensión</th><th>Meta</th><th>Logrado</th></tr></thead><tbody>
+<tr><td>MAE test</td><td>&lt; $35</td><td class="ok">$26.55 ✓</td></tr>
+<tr><td>R² test</td><td>&gt; 0.80</td><td class="ok">0.905 ✓</td></tr>
+<tr><td>MAPE test</td><td>&lt; 20%</td><td class="ok">16% ✓</td></tr>
+<tr><td>Latencia</td><td>Cotizar en segundos, offline</td><td class="ok">App HTML ✓</td></tr>
+</tbody></table>
+</section>
+
+<!-- P5 DATOS -->
+<section class="page">
+<p class="pageno">Página 5 de 16 · CRISP-DM 2 · Criterio 1</p>
+<h2>2. Comprensión de los datos — Dataset</h2>
+<p><b>Origen:</b> Snowflake <code>WMNAMCT-LN60692 / ARQUI1.CAPA_BRONCE</code>, tablas <code>ENVIO</code> (ruta, fechas, costo) + <code>TRANSPORTE</code> (tipo, capacidad, bandera), unidas por <code>ID_TRANSPORTE</code>. Carga con conector oficial y warehouse <code>COMPUTE_WH</code>.</p>
+<table><thead><tr><th>Variable</th><th>Tipo</th><th>Rol</th><th>Notas calidad</th></tr></thead><tbody>
+<tr><td>distancia_km</td><td>numérica</td><td>feature</td><td>&gt;0 filtrado; media train 1483.4</td></tr>
+<tr><td>duracion_h</td><td>numérica</td><td>feature</td><td>derivada de fechas; media 9.38</td></tr>
+<tr><td>capacidad_tn</td><td>numérica</td><td>feature</td><td>media 412.2; atípicos altos vigilados</td></tr>
+<tr><td>mes</td><td>numérica 1–12</td><td>feature</td><td>estacionalidad</td></tr>
+<tr><td>tipo / origen / destino / pais_bandera</td><td>categóricas</td><td>features</td><td>4 / 3 / 5 / 4 niveles; nulos → "FALTA"</td></tr>
+<tr><td>costo_flete_usd</td><td>numérica</td><td><b>target</b></td><td>&gt;0 filtrado; sin leakage hacia features</td></tr>
+</tbody></table>
+<p><b>EDA inicial:</b> 20.000 filas útiles; distribuciones asimétricas a la derecha (rutas largas caras); correlación dominante distancia–costo; detección de duplicados y outliers por rango; <b>cuarentena</b> de artefactos sintéticos (ver Anexo).</p>
+</section>
+
+<!-- P6 VARIABLES -->
+<section class="page">
+<p class="pageno">Página 6 de 16 · Criterio 11</p>
+<h2>3. Análisis de variables</h2>
+<table><thead><tr><th>Variable</th><th>Media (train)</th><th>Lectura</th></tr></thead><tbody>
+<tr><td>distancia_km</td><td>1483.36</td><td>Principal driver del costo (coef. estandarizado +8.76, el mayor)</td></tr>
+<tr><td>duracion_h</td><td>9.38</td><td>Señal débil una vez controlada la distancia</td></tr>
+<tr><td>capacidad_tn</td><td>412.22</td><td>Efecto escala leve; barcazas concentran volumen</td></tr>
+<tr><td>mes</td><td>6.50</td><td>Estacionalidad suave de campaña</td></tr>
+</tbody></table>
+<p><b>Categóricas:</b> tipo ∈ {BARCAZA, CAMION, CAMION CISTERNA, FERROVIARIO}; origen ∈ {Puerto Quijarro, San Julián, Warnes}; destino ∈ {Buenos Aires, Puerto Aguirre, Puerto Quijarro, Rosario, Santos}; bandera ∈ {Argentina, Bolivia, Brasil, Paraguay}. No se detectó multicolinealidad problemática tras one-hot (Ridge la regulariza de todos modos). La importancia del modelo confirma: distancia ≫ destino/origen ≫ resto.</p>
+</section>
+
+<!-- P7 PREPARACION -->
+<section class="page">
+<p class="pageno">Página 7 de 16 · CRISP-DM 3 · Criterios 2–3</p>
+<h2>4. Preparación de datos — train / test</h2>
+<ul>
+<li><b>Limpieza:</b> filtro costo&gt;0 y distancia&gt;0; numéricas a float con coerción; categóricas con "FALTA"; sin imputación del target.</li>
+<li><b>División cronológica 70/15/15</b> (17.000 train aprox.): respeta el orden temporal de campañas; el test queda como bloque final nunca visto.</li>
+<li><b>Sin leakage:</b> imputación (mediana) y estandarizado <b>ajustados solo en train</b>; one-hot con <code>handle_unknown="ignore"</code>; hiperparámetros elegidos solo con validación.</li>
+<li><b>Pipeline reproducible:</b> <code>SimpleImputer(median) → StandardScaler</code> en numéricas + <code>OneHotEncoder</code> en categóricas → Ridge. Fijado <code>random_state</code> y <code>scikit-learn==1.8.0</code>.</li>
+</ul>
+<pre>train (70%) → validación temporal → test final (15%, intocable)
+mediana/std y vocabularios: fit SOLO en train · test solo transform</pre>
+</section>
+
+<!-- P8 MODELADO -->
+<section class="page">
+<p class="pageno">Página 8 de 16 · CRISP-DM 4 · Criterio 5</p>
+<h2>5. Modelado</h2>
+<p><b>Campeón: Ridge α=0.1</b> — regresión lineal con regularización L2, ideal porque la señal es mayormente lineal en distancia con ajustes categóricos, y la penalización estabiliza el one-hot. Búsqueda de α en grilla logarítmica de 20 valores (10⁻¹…10⁵).</p>
+<table><thead><tr><th>Modelo</th><th>Justificación</th><th>Parámetros</th></tr></thead><tbody>
+<tr><td><b>Ridge (productivo)</b></td><td>Simple, estable, exportable a JSON exacto</td><td>α=0.1 · 20 coefs + intercepto 156.48</td></tr>
+<tr><td>Random Forest (retador)</td><td>Captura no-linealidades</td><td>MAE 26.65 / R² 0.901 — empate, más pesado</td></tr>
+<tr><td>HGB (retador)</td><td>Gradiente moderno</td><td>MAE 26.41 / R² 0.903 — empate técnico</td></tr>
+<tr><td>Media (baseline)</td><td>Piso de comparación honesto</td><td>MAE 102.38 / R² 0.000</td></tr>
+</tbody></table>
+<p class="muted">Solo modelos ML supervisados; sin ARIMA por política del proyecto (baselines ingenuos solo como referencia etiquetada).</p>
+</section>
+
+<!-- P9 VALIDACION -->
+<section class="page amber">
+<p class="pageno">Página 9 de 16 · Criterio 9</p>
+<h2>6. Validación — generalización garantizada</h2>
+<ul>
+<li><b>TimeSeriesSplit 3 folds</b> dentro del train para elegir α; el test final se evalúa una sola vez.</li>
+<li><b>Overfitting:</b> train≈test (R² 0.905) → sin sobreajuste; <b>underfitting:</b> supera al baseline por 74% → capacidad suficiente.</li>
+<li><b>Réplica exacta:</b> coeficientes exportados a JSON; el motor JS de la app reproduce a sklearn con diff &lt;0.01 en 5 casos (badge "modelo verificado 5/5" en vivo).</li>
+</ul>
+<table><thead><tr><th>Caso</th><th>sklearn (USD)</th><th>App JS (USD)</th><th>Diff</th></tr></thead><tbody>
+<tr><td>1</td><td>368.44</td><td>368.44</td><td class="ok">0.001</td></tr>
+<tr><td>2</td><td>205.79</td><td>205.79</td><td class="ok">0.001</td></tr>
+<tr><td>3</td><td>242.86</td><td>242.86</td><td class="ok">0.003</td></tr>
+<tr><td>4</td><td>69.13</td><td>69.13</td><td class="ok">0.005</td></tr>
+<tr><td>5</td><td>71.99</td><td>71.99</td><td class="ok">0.005</td></tr>
+</tbody></table>
+</section>
+
+<!-- P10 EVALUACION -->
+<section class="page">
+<p class="pageno">Página 10 de 16 · CRISP-DM 5 · Criterios 4 y 7</p>
+<h2>7. Evaluación — métricas y resultados</h2>
+<table><thead><tr><th>Modelo (test)</th><th>MAE ↓</th><th>R² ↑</th><th>MAPE ↓</th></tr></thead><tbody>
+<tr><td><b>Ridge α=0.1</b></td><td><b>$26.55</b></td><td><b>0.905</b></td><td><b>16%</b></td></tr>
+<tr><td>HGB</td><td>$26.41</td><td>0.903</td><td>≈16%</td></tr>
+<tr><td>RF</td><td>$26.65</td><td>0.901</td><td>≈16%</td></tr>
+<tr><td>Media</td><td>$102.38</td><td>0.000</td><td>—</td></tr>
+</tbody></table>
+<p><b>Lectura:</b> el error típico es ±$26.5 por envío (≈16% relativo); el modelo explica el 90.5% de la varianza. Cada cotización se entrega con su <b>banda ±1 MAE</b> para negociar con margen de seguridad. <b>Limitaciones:</b> rutas o países nuevos caen a "desconocido"; costos extremos fuera del rango train deben escalarse a revisión humana.</p>
+</section>
+
+<!-- P11 VIS -->
+<section class="page">
+<p class="pageno">Página 11 de 16 · Criterio 8</p>
+<h2>8. Visualizaciones</h2>
+<h3>Duelo MAE test (barra corta = mejor)</h3>
+<svg class="chart" viewBox="0 0 400 120"><text x="0" y="14" font-size="10">Media $102.38</text><rect x="100" y="4" width="280" height="14" rx="4" fill="#C62828"/><text x="0" y="40" font-size="10">Ridge $26.55</text><rect x="100" y="30" width="73" height="14" rx="4" fill="#00A7C6"/><text x="0" y="66" font-size="10">HGB $26.41</text><rect x="100" y="56" width="72" height="14" rx="4" fill="#153C5A"/><text x="0" y="92" font-size="10">RF $26.65</text><rect x="100" y="82" width="73" height="14" rx="4" fill="#D97008"/></svg>
+<h3>R² test por modelo</h3>
+<svg class="chart" viewBox="0 0 400 110"><text x="0" y="14" font-size="10">Ridge 0.905</text><rect x="100" y="4" width="272" height="14" rx="4" fill="#15803D"/><text x="0" y="40" font-size="10">HGB 0.903</text><rect x="100" y="30" width="271" height="14" rx="4" fill="#153C5A"/><text x="0" y="66" font-size="10">RF 0.901</text><rect x="100" y="56" width="270" height="14" rx="4" fill="#D97008"/><text x="0" y="92" font-size="10">Media 0.000</text><rect x="100" y="82" width="3" height="14" rx="4" fill="#C62828"/></svg>
+<h3>Casos de verificación (USD predichos)</h3>
+<svg class="chart" viewBox="0 0 400 110"><rect x="30" y="10" width="40" height="90" fill="#00A7C6"/><text x="30" y="108" font-size="8">368</text><rect x="110" y="50" width="40" height="50" fill="#00A7C6"/><text x="110" y="108" font-size="8">206</text><rect x="190" y="40" width="40" height="60" fill="#00A7C6"/><text x="190" y="108" font-size="8">243</text><rect x="270" y="82" width="40" height="18" fill="#D97008"/><text x="270" y="108" font-size="8">69</text><rect x="330" y="80" width="40" height="20" fill="#D97008"/><text x="330" y="108" font-size="8">72</text></svg>
+<p class="muted">Gráficos con ejes y títulos; la app suma gauge R², donut IoT, histograma de lotes y banda ±MAE por cotización.</p>
+</section>
+
+<!-- P12 NEGOCIO VALOR -->
+<section class="page amber">
+<p class="pageno">Página 12 de 16 · Criterio 6</p>
+<h2>9. Importancia para el negocio</h2>
+<ul>
+<li><b>Decisión que habilita:</b> cotizar un embarque en segundos con banda de confianza, en vez de estimar a mano con error &gt;$100.</li>
+<li><b>Traducción a acción:</b> si la banda superior sigue bajo el precio del cliente → cerrar; si la banda cruza el umbral → renegociar ruta/mes/transporte o escalar.</li>
+<li><b>Ahorro indicativo:</b> bajar el error medio de ~$102 a ~$27 evita ≈$75 de desviación por envío; en 1.000 envíos/año ≈ <b>$75.000</b> de riesgo contenido.</li>
+<li><b>Alineación:</b> responde al objetivo inicial (margen del crush) sin prometer milagros: hit-rate y límites declarados.</li>
+</ul>
+</section>
+
+<!-- P13 NUBE -->
+<section class="page">
+<p class="pageno">Página 13 de 16 · Criterio 10</p>
+<h2>10. Conexión de datos en la nube</h2>
+<ul>
+<li><b>Fuente:</b> Snowflake <code>ARQUI1.CAPA_BRONCE</code> (44/44 tablas migradas y conteos idénticos a la cuenta anterior).</li>
+<li><b>Lectura eficiente:</b> una sola query con JOIN + filtro (&gt;0) vía warehouse <code>COMPUTE_WH</code>; sin credenciales en código (sesión activa / variables de entorno en ejecución local).</li>
+<li><b>Reproducibilidad:</b> script de exportación versionado genera <code>modelo_flete_web.json</code> (medianas, medias, escalas, vocabularios, 20 coeficientes, α, métricas y 5 casos testigo).</li>
+<li><b>Escalabilidad:</b> el scoring vive en el navegador (sin servidor); re-entrenar = regenerar el JSON y republicar el HTML.</li>
+</ul>
+</section>
+
+<!-- P14 DESPLIEGUE -->
+<section class="page">
+<p class="pageno">Página 14 de 16 · CRISP-DM 6 (despliegue)</p>
+<h2>11. Despliegue — la app en manos del usuario</h2>
+<p><b>Archivo:</b> <code>Despligue/app_flete.html</code> — doble clic, sin internet ni instalación. Theme oscuro moderno con 4 pestañas:</p>
+<ol>
+<li><b>Predecir:</b> 8 campos (4 numéricos + 4 listas con 4/3/5/4 opciones) → cotización con count-up, banda ±MAE y top-3 factores del caso.</li>
+<li><b>Lotes CSV:</b> sube CSV con las 8 columnas → predice N filas, calcula MAE/R² si trae <code>costo_flete_usd</code>, dibuja histograma y descarga resultados.</li>
+<li><b>Dashboards:</b> KPIs con count-up, gauge R², duelo MAE/R², cobertura aceite (+53% vs +40%), donut IoT (F1 0.60, AUC 0.87), verificación 5 casos.</li>
+<li><b>Monitoreo:</b> deriva, registro de versiones, plan de mantenimiento y riesgos conocidos.</li>
+</ol>
+</section>
+
+<!-- P15 MONITOREO -->
+<section class="page">
+<p class="pageno">Página 15 de 16 · CRISP-DM 6 (monitoreo)</p>
+<h2>12. Monitoreo y mantenimiento</h2>
+<table><thead><tr><th>Señal</th><th>Regla</th><th>Acción</th></tr></thead><tbody>
+<tr><td>MAE mensual del lote</td><td>&gt; $35 dos meses seguidos</td><td>Re-entrenar y versionar (v2)</td></tr>
+<tr><td>R² del lote</td><td>&lt; 0.70</td><td>Declarar deriva, re-entrenar</td></tr>
+<tr><td>Deriva de medias</td><td>&gt; 15% vs train en cualquier numérica</td><td>Revisar supuestos de ruta/precio</td></tr>
+<tr><td>Cambio de esquema Bronce</td><td>Nuevas categorías o columnas</td><td>Regenerar JSON + self-test 5/5</td></tr>
+</tbody></table>
+<p><b>Riesgos vigilados:</b> ventas 2025 contaminadas, contrato 1 e IDs basura, fechas 1990/2099, voltaje IoT constante 3.3. <b>Registro:</b> v1 (29/9) Ridge α=0.1, MAE $26.55, R² 0.905, sklearn 1.8.0.</p>
+</section>
+
+<!-- P16 CIERRE -->
+<section class="page amber">
+<p class="pageno">Página 16 de 16 · Cierre y anexos</p>
+<h2>13. Conclusiones, limitaciones y futuro</h2>
+<p><b>Conclusión:</b> el modelo cumple las tres metas (MAE, R², MAPE), generaliza en test cronológico y opera offline con réplica exacta. Queda como segunda opinión cuantificada con banda de riesgo, no como orden automática.</p>
+<h3>Limitaciones honestas</h3>
+<ul>
+<li>Frentes nulos documentados: calidad de grano (AUC≈0.5, etiqueta aleatoria), retrasos uniformes (R²≈0), IoT a 1 paso ≈ azar.</li>
+<li>Datos sintéticos en cuarentena no deben volver al train sin auditoría.</li>
+</ul>
+<h3>Trabajo futuro</h3>
+<ul><li>Intervalos conformales por ruta; features de combustible/temporada; calibración mensual automática.</li></ul>
+<h3>Anexo — artefactos en cuarentena</h3>
+<p class="muted">Productor 525 (4.381M TN imposibles) · contrato 1 (cluster basura) · ~800 ventas 2025 imposibles · fechas 1990/2099 · inventario≫capacidad · IoT cada 5 min. Glosario: MAE = error absoluto medio (USD); R² = varianza explicada; MAPE = error %; deriva = cambio de distribución vs train.</p>
+</section>
+
+</div>
+</body>
+</html>
