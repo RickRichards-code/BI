@@ -39,7 +39,23 @@ table{width:100%;border-collapse:collapse;font-size:.72rem;background:#fff}th{ba
 details{border:1px solid var(--bd);border-radius:10px;padding:10px 12px;margin-top:10px;background:#fff}
 summary{cursor:pointer;font-weight:700;font-size:.8rem;min-height:44px;display:flex;align-items:center}
 .bar{height:12px;background:var(--mu);border-radius:6px;overflow:hidden}.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--p),var(--s));border-radius:6px;transition:width .6s ease}
-@media (prefers-reduced-motion: reduce){.stagger>*{animation:none;opacity:1;transform:none}#indicator,.bar i{transition:none}}
+.card.lift{transition:transform .2s ease,box-shadow .2s ease}.card.lift:hover{transform:translateY(-3px);box-shadow:0 10px 24px rgba(30,64,175,.14)}
+.span2{grid-column:1/-1}
+.hero2{background:linear-gradient(135deg,#1E40AF 10%,#3B82F6 55%,#D97706 130%);color:#fff;border:0;border-top:0}
+.hero2 h3{color:#fff}.hero2 p{color:#dbeafe;font-size:.78rem}
+.hbar{display:grid;grid-template-columns:64px 1fr 62px;align-items:center;gap:8px;margin:7px 0;font-size:.74rem;color:var(--muf)}
+.hbar b{color:var(--fg);text-align:right}
+.track{height:14px;background:var(--mu);border-radius:7px;overflow:hidden}
+.track i{display:block;height:100%;width:0;border-radius:7px;background:linear-gradient(90deg,var(--p),var(--s));animation:grow 1s cubic-bezier(.2,.8,.3,1) forwards}
+.track i.max{background:linear-gradient(90deg,#DC2626,#F59E0B)}
+.track i.good{background:linear-gradient(90deg,#15803d,#22c55e)}
+@keyframes grow{to{width:var(--w)}}
+.gauge-num{font-size:1.5rem;font-weight:800;color:var(--p)}
+.pill{display:inline-block;padding:2px 10px;border-radius:99px;font-size:.68rem;font-weight:800}
+.pill.g{background:#dcfce7;color:#15803d}.pill.b{background:#dbeafe;color:#1E40AF}.pill.o{background:#ffedd5;color:#92400e}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:6px}
+svg.g{width:100%;height:auto;display:block}
+@media (prefers-reduced-motion: reduce){.stagger>*{animation:none;opacity:1;transform:none}#indicator,.bar i,.track i{transition:none;animation:none}}
 </style>
 </head>
 <body>
@@ -160,11 +176,30 @@ $('btn-dl').addEventListener('click', () => {
 });
 // dashboards
 $('dash').innerHTML = `
-<div class="card"><h3>KPIs medidos</h3><p><span class="kpi" style="font-size:1.1rem">R² 0.905</span> <span class="kpi" style="font-size:1.1rem">MAE $26.55</span></p><p>MAPE 16% · mejora 74% vs media · 17k train cronológico</p></div>
-<div class="card"><h3>Proyecto (test)</h3><table><thead><tr><th>Modelo</th><th>MAE</th><th>R²</th></tr></thead><tbody>
-<tr><td>Ridge</td><td>26.55</td><td>0.905</td></tr><tr><td>RF</td><td>26.65</td><td>0.901</td></tr><tr><td>HGB</td><td>26.41</td><td>0.903</td></tr><tr><td>Media</td><td>102.38</td><td>0.000</td></tr></tbody></table></div>
-<div class="card"><h3>Cobertura aceite (backtest)</h3><p>+53% vs +40% buy&hold · vol −28% · hit-rate 0.50 honesto</p></div>
-<div class="card"><h3>IoT riesgo térmico</h3><p>F1 0.60 · AUC 0.87 · recall ~1.0 (sobre-alerta declarada)</p></div>`;
+<div class="card span2 hero2"><h3>Tablero de desempeño · modelos medidos en test</h3><p>Ridge en producción · RF y HGB como retadores · Media como baseline · Cobertura aceite e IoT como frentes de apoyo. Todo verificado, sin adornos inventados.</p></div>
+<div class="card lift"><h3>KPIs del modelo vivo</h3><p><span class="kpi" data-count="0.905" data-dec="3">0.000</span><small>R² test</small> &nbsp;<span class="kpi" data-count="26.55" data-dec="2" data-pre="$">0</span><small>MAE USD</small></p><p><span class="pill g">MAPE 16%</span> <span class="pill b">mejora 74% vs media</span> <span class="pill o">17k train cronológico</span></p></div>
+<div class="card lift"><h3>Precisión R² (test)</h3>
+<svg class="g" viewBox="0 0 140 78"><path d="M14 70 A54 54 0 0 1 126 70" fill="none" stroke="#E9EEF6" stroke-width="12" stroke-linecap="round"/><path d="M14 70 A54 54 0 0 1 126 70" fill="none" stroke="#1E40AF" stroke-width="12" stroke-linecap="round" stroke-dasharray="169.6" stroke-dashoffset="16.1"><animate attributeName="stroke-dashoffset" from="169.6" to="16.1" dur="1.2s" fill="freeze"/></path><text x="70" y="58" text-anchor="middle" font-size="20" font-weight="800" fill="#1E40AF">0.905</text><text x="70" y="72" text-anchor="middle" font-size="9" fill="#475569">Ridge · R² test</text></svg></div>
+<div class="card lift span2"><h3>Duelo de modelos · MAE test (barra más corta = mejor)</h3>
+<div class="hbar"><span><i class="dot" style="background:#1E40AF"></i>Ridge</span><div class="track"><i style="--w:26%"></i></div><b>$26.55</b></div>
+<div class="hbar"><span><i class="dot" style="background:#3B82F6"></i>HGB</span><div class="track"><i style="--w:25.8%"></i></div><b>$26.41</b></div>
+<div class="hbar"><span><i class="dot" style="background:#0ea5e9"></i>RF</span><div class="track"><i style="--w:26%"></i></div><b>$26.65</b></div>
+<div class="hbar"><span><i class="dot" style="background:#DC2626"></i>Media</span><div class="track"><i class="max" style="--w:100%"></i></div><b>$102.38</b></div>
+<p style="font-size:.74rem;color:var(--muf)">R²: Ridge 0.905 · HGB 0.903 · RF 0.901 · Media 0.000. Los tres ML empatan; Ridge queda por simplicidad y estabilidad.</p></div>
+<div class="card lift"><h3>Cobertura aceite · backtest honesto</h3>
+<div class="hbar"><span>Estrategia</span><div class="track"><i class="good" style="--w:88%"></i></div><b>+53%</b></div>
+<div class="hbar"><span>Buy&amp;hold</span><div class="track"><i style="--w:67%"></i></div><b>+40%</b></div>
+<p style="font-size:.74rem;color:var(--muf)">Vol −28% · hit-rate 0.50 declarado (no es caja mágica, es gestión de riesgo).</p></div>
+<div class="card lift"><h3>IoT riesgo térmico</h3>
+<svg class="g" viewBox="0 0 120 120"><circle cx="60" cy="60" r="44" fill="none" stroke="#E9EEF6" stroke-width="14"/><circle cx="60" cy="60" r="44" fill="none" stroke="#D97706" stroke-width="14" stroke-linecap="round" stroke-dasharray="276.5" stroke-dashoffset="110.6" transform="rotate(-90 60 60)"><animate attributeName="stroke-dashoffset" from="276.5" to="110.6" dur="1.2s" fill="freeze"/></circle><text x="60" y="58" text-anchor="middle" font-size="19" font-weight="800" fill="#1E3A8A">0.60</text><text x="60" y="72" text-anchor="middle" font-size="9" fill="#475569">F1 score</text></svg>
+<div class="hbar"><span>AUC</span><div class="track"><i style="--w:87%"></i></div><b>0.87</b></div>
+<p style="font-size:.74rem;color:var(--muf)">Recall ~1.0 con sobre-alerta declarada: prefiere avisar de más.</p></div>`;
+document.querySelectorAll('#dash [data-count]').forEach(el => {
+  const to = parseFloat(el.dataset.count), dec = +(el.dataset.dec || 0), pre = el.dataset.pre || '';
+  const t0 = performance.now(), dur = 900, red = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function fr(t){ const k = red ? 1 : Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3); el.textContent = pre + (to * e).toFixed(dec); if (k < 1) requestAnimationFrame(fr); }
+  requestAnimationFrame(fr);
+});
 </script>
 </body>
 </html>
