@@ -1,5 +1,5 @@
-% Informe final — Cotización inteligente de fletes · Gravetal Bolivia
-% Compilar: pdflatex informe_final.tex (dos pasadas). 16 páginas.
+% Caso de estudio 1: Machine Learning — Cotización de fletes · Gravetal Bolivia
+% Compilar: pdflatex informe_final.tex (dos pasadas).
 \documentclass[11pt]{article}
 \usepackage[utf8]{inputenc}
 \usepackage[spanish]{babel}
@@ -25,44 +25,42 @@
 \titleformat{\subsection}{\bfseries\color{gravetal}}{}{0em}{}
 \pagestyle{fancy}
 \fancyhf{}
-\fancyhead[L]{\small\textsc{Gravetal · Cotizador de fletes}}
-\fancyfoot[R]{\small Pág. \thepage\ de 16}
-\fancyfoot[L]{\small\textsc{Informe final ML · Oct-2026}}
+\fancyhead[L]{\small\textsc{Caso de estudio 1 · Machine Learning}}
+\fancyfoot[R]{\small Pág. \thepage}
+\fancyfoot[L]{\small\textsc{Gravetal · Informe final · Oct-2026}}
 \renewcommand{\headrulewidth}{0.6pt}
 \hypersetup{colorlinks=true,linkcolor=gravetal,urlcolor=acento}
 \graphicspath{{./}}
 \newtcolorbox{kpi}{colback=fondo,colframe=acento,boxrule=1pt,arc=3mm,
   fontupper=\bfseries\color{gravetal},halign=center,valign=center}
+\newcommand{\blank}[1]{\par #1: \rule{9cm}{0.4pt}\par\vspace{0.6ex}}
 \begin{document}
-% ---------- P1 CARÁTULA ----------
+% ---------- CARÁTULA (una hoja) ----------
+\thispagestyle{empty}
 \begin{center}
-\includegraphics[height=2.6cm]{"logo umsa"}\\[1ex]
-{\small\textsc{Universidad Mayor de San Andrés · Proyecto de Machine Learning}}\\[1ex]
-{\color{acento}\rule{\linewidth}{2pt}}\\[1ex]
-{\Huge\bfseries\color{gravetal} Cotización inteligente\\ de fletes de exportación}\\[1ex]
-{\large Informe final · Gravetal Bolivia}\\[0.5ex]
+\includegraphics[height=2.8cm]{"logo umsa"}\\[1ex]
+{\small\textsc{Universidad Mayor de San Andrés}}\\[2ex]
+{\color{acento}\rule{\linewidth}{2pt}}\\[2ex]
+{\Huge\bfseries\color{gravetal} Caso de estudio 1:\\ Machine Learning}\\[1.5ex]
+{\large Cotización inteligente de fletes de exportación · Gravetal Bolivia}\\[0.5ex]
 {\small Metodología CRISP-DM · Modelo Ridge en producción · Snowflake + Python + App offline}
 \end{center}
+\vspace{2ex}
+\blank{Materia}
+\blank{Docente}
+\blank{Dupla 2 — Integrante 1}
+\blank{Dupla 2 — Integrante 2}
+\vspace{1ex}
 \begin{center}
 \begin{minipage}{0.31\linewidth}\begin{kpi}R² 0.905\\{\small test}\end{kpi}\end{minipage}\hfill
 \begin{minipage}{0.31\linewidth}\begin{kpi}MAE \$26.55\\{\small test}\end{kpi}\end{minipage}\hfill
 \begin{minipage}{0.31\linewidth}\begin{kpi}MAPE 16\%\\{\small test}\end{kpi}\end{minipage}
 \end{center}
-\begin{center}\small
-\begin{tabular}{ll}
-\toprule \textbf{Rubro} & \textbf{Detalle} \\
-\midrule
-Problema & Regresión: predecir \texttt{costo\_flete\_usd} por envío \\
-Datos & 20\,000 envíos · Snowflake \texttt{ARQUI1.CAPA\_BRONCE} (ENVIO + TRANSPORTE) \\
-Modelo & Ridge $\alpha{=}0.1$ · scikit-learn 1.8.0 · réplica exacta JS 5/5 \\
-Despliegue & \texttt{Despligue/app\_flete.html} (offline) + \texttt{modelo\_flete\_web.json} \\
-Versión & v1 · Octubre 2026 · rama \texttt{mineria} \\
-\bottomrule
-\end{tabular}
-\end{center}
-\vfill\begin{center}\textit{Página 1 de 16 · Carátula}\end{center}
+\vfill
+\begin{center}{\small v1 · Octubre 2026 · rama \texttt{mineria} ·
+\texttt{Despligue/app\_flete.html} + \texttt{modelo\_flete\_web.json}}\end{center}
 \newpage
-% ---------- P2 ÍNDICE ----------
+% ---------- ÍNDICE ----------
 \section*{Índice y control documental}
 \begin{multicols}{2}
 \begin{enumerate}[leftmargin=*]
@@ -89,10 +87,8 @@ Versión & v1 · Octubre 2026 · rama \texttt{mineria} \\
 \end{tabular}
 \subsection*{Cómo leer este informe}
 Cada capítulo mapea una fase CRISP-DM y los 11 criterios del programa Python.
-Los gráficos se generaron con matplotlib desde los resultados medidos (scripts versionados).
-\vfill\begin{center}\textit{Página 2 de 16 · Índice}\end{center}
-\newpage
-% ---------- P3 RESUMEN ----------
+Los gráficos se generaron con matplotlib desde los resultados medidos.
+% ---------- RESUMEN ----------
 \section{Resumen ejecutivo}
 Gravetal exporta harina y aceite de soya; el flete define gran parte del margen.
 Este proyecto convierte 20\,000 envíos históricos en un \textbf{cotizador supervisado}
@@ -108,9 +104,7 @@ con \textbf{MAE \$26.55 y $R^2$ 0.905}, 74.1\% mejor que el baseline de la media
 \item \textbf{Valor:} cotización en segundos con banda $\pm1$ MAE (\$53.10 de ancho); re-entrenamiento si MAE mensual $>\$35$ o deriva $>15\%$.
 \item \textbf{Honestidad:} sintéticos en cuarentena (contrato 1, ventas 2025, fechas 1990/2099) y frentes nulos documentados (calidad AUC$\approx$0.5, retrasos $R^2\approx$0).
 \end{itemize}
-\vfill\begin{center}\textit{Página 3 de 16 · Resumen ejecutivo}\end{center}
-\newpage
-% ---------- P4 NEGOCIO ----------
+% ---------- NEGOCIO ----------
 \section{Comprensión del negocio (CRISP-DM 1)}
 \textbf{Objetivo:} reducir el error de cotización para proteger el margen del crush
 ($\approx$80 USD/TN). \textbf{Traducción:} regresión del \texttt{costo\_flete\_usd}
@@ -123,9 +117,7 @@ con 8 features de ruta, equipo y mes. Métrica principal MAE (dólares); secunda
 \textbf{Decisión que habilita:} cotizar un embarque en segundos con banda de confianza
 en vez de estimar a mano (error $>\$100$). Regla: banda superior bajo el precio del
 cliente $\to$ cerrar; si la cruza $\to$ renegociar ruta/mes/transporte o escalar.
-\vfill\begin{center}\textit{Página 4 de 16 · Negocio}\end{center}
-\newpage
-% ---------- P5 DATOS ----------
+% ---------- DATOS ----------
 \section{Datos y dataset (CRISP-DM 2 · Criterio 1)}
 \textbf{Origen:} Snowflake \texttt{WMNAMCT-LN60692 / ARQUI1.CAPA\_BRONCE},
 \texttt{ENVIO} + \texttt{TRANSPORTE} unidas por \texttt{ID\_TRANSPORTE}, vía
@@ -145,9 +137,7 @@ costo\_flete\_usd & numérica & \textbf{target} & $>0$; sin leakage a features \
 \end{center}}
 EDA: 20\,000 filas útiles; colas a la derecha (rutas largas caras); correlación
 distancia--costo dominante; duplicados y outliers por rango; artefactos sintéticos en cuarentena.
-\vfill\begin{center}\textit{Página 5 de 16 · Dataset}\end{center}
-\newpage
-% ---------- P6 VARIABLES ----------
+% ---------- VARIABLES ----------
 \section{Análisis de variables (Criterio 11)}
 \begin{center}
 \begin{minipage}{0.55\linewidth}
@@ -170,9 +160,7 @@ origen \{Puerto Quijarro, San Julián, Warnes\};
 destino \{Buenos Aires, Puerto Aguirre, Puerto Quijarro, Rosario, Santos\};
 bandera \{Argentina, Bolivia, Brasil, Paraguay\}. Sin multicolinealidad problemática
 (Ridge la regulariza de todos modos).
-\vfill\begin{center}\textit{Página 6 de 16 · Variables}\end{center}
-\newpage
-% ---------- P7 PREPARACIÓN ----------
+% ---------- PREPARACIÓN ----------
 \section{Preparación: train / test (CRISP-DM 3 · Criterios 2--3)}
 \begin{itemize}[leftmargin=*]
 \item \textbf{Limpieza:} costo$>0$, distancia$>0$; coerción a float; ``FALTA'' en nulos categóricos; sin imputar el target.
@@ -181,9 +169,7 @@ bandera \{Argentina, Bolivia, Brasil, Paraguay\}. Sin multicolinealidad problem�
 \item \textbf{Pipeline reproducible:} \texttt{SimpleImputer(median) $\to$ StandardScaler} + \texttt{OneHotEncoder} $\to$ Ridge; \texttt{random\_state} fijo; \texttt{scikit-learn==1.8.0}.
 \end{itemize}
 \begin{center}\begin{kpi}train (70\%) $\to$ validación temporal $\to$ test final intocable (15\%)\end{kpi}\end{center}
-\vfill\begin{center}\textit{Página 7 de 16 · Preparación}\end{center}
-\newpage
-% ---------- P8 MODELADO ----------
+% ---------- MODELADO ----------
 \section{Modelado (CRISP-DM 4 · Criterio 5)}
 \textbf{Campeón: Ridge $\alpha{=}0.1$} (grilla logarítmica de 20 valores
 $10^{-1}\dots10^{5}$): señal mayormente lineal + regularización del one-hot,
@@ -201,9 +187,7 @@ Media & baseline & 102.38 & --- \\
 \end{center}
 Solo ML supervisado (sin ARIMA por política; baselines ingenuos solo etiquetados).
 Los tres ML empatan; Ridge queda por simplicidad y estabilidad.
-\vfill\begin{center}\textit{Página 8 de 16 · Modelado}\end{center}
-\newpage
-% ---------- P9 VALIDACIÓN ----------
+% ---------- VALIDACIÓN ----------
 \section{Validación (Criterio 9)}
 TimeSeriesSplit de 3 folds en train para elegir $\alpha$; test evaluado una sola vez.
 Train$\approx$test ($R^2$ 0.905): sin sobreajuste; +74.1\% vs baseline: capacidad suficiente.
@@ -224,9 +208,7 @@ Train$\approx$test ($R^2$ 0.905): sin sobreajuste; +74.1\% vs baseline: capacida
 \begin{kpi}Réplica exacta en navegador\\{\small diff máx 0.005 · 5/5 $\checkmark$}\end{kpi}
 \end{minipage}
 \end{center}
-\vfill\begin{center}\textit{Página 9 de 16 · Validación}\end{center}
-\newpage
-% ---------- P10 EVALUACIÓN ----------
+% ---------- EVALUACIÓN ----------
 \section{Métricas y resultados (CRISP-DM 5 · Criterios 4 y 7)}
 \begin{center}
 \begin{minipage}{0.52\linewidth}
@@ -252,12 +234,10 @@ nuevos $\to$ ``desconocido''; extremos fuera de rango $\to$ revisión humana.
 \includegraphics[width=\linewidth]{fig_banda}
 \end{minipage}
 \end{center}
-\begin{center}\textit{Página 10 de 16 · Evaluación}\end{center}
-\newpage
-% ---------- P11 VIS ----------
+% ---------- VIS ----------
 \section{Visualizaciones (Criterio 8)}
 \begin{center}
-\begin{minipage}{0.48\linewidth}\centering{\small $R^2$ test por modelo}
+\begin{minipage}{0.48\linewidth}\centering{\small $R^2$ test por modelo (Media = 0, sin barra)}
 \includegraphics[width=\linewidth]{fig_r2}
 \end{minipage}\hfill
 \begin{minipage}{0.48\linewidth}\centering{\small Réplica sklearn vs JS (idénticas)}
@@ -269,11 +249,9 @@ nuevos $\to$ ``desconocido''; extremos fuera de rango $\to$ revisión humana.
 \includegraphics[width=\linewidth]{fig_negocio}
 \end{minipage}
 \end{center}
-Gráficos matplotlib desde resultados medidos: duelo MAE (p. 10), $R^2$, réplica 5 casos
-y frentes de apoyo. La app suma gauge, donut, histograma de lotes y banda $\pm$MAE.
-\begin{center}\textit{Página 11 de 16 · Visualizaciones}\end{center}
-\newpage
-% ---------- P12 VALOR ----------
+Gráficos matplotlib desde resultados medidos. La app suma gauge, donut, histograma
+de lotes y banda $\pm$MAE por cotización.
+% ---------- VALOR ----------
 \section{Valor para el negocio (Criterio 6)}
 \begin{itemize}[leftmargin=*]
 \item \textbf{Cobertura aceite (backtest):} +53\% estrategia vs +40\% buy\&hold, vol $-$28\%, hit-rate 0.50 declarado: gestión de riesgo, no caja mágica.
@@ -281,9 +259,7 @@ y frentes de apoyo. La app suma gauge, donut, histograma de lotes y banda $\pm$M
 \item \textbf{Ahorro indicativo:} de $\approx$\$102 a $\approx$\$27 de error medio $\approx$ \$75 por envío.
 \end{itemize}
 \begin{center}\begin{kpi}{$\approx$\$75\,000 de riesgo contenido}\\{\small 1\,000 envíos/año}\end{kpi}\end{center}
-\vfill\begin{center}\textit{Página 12 de 16 · Valor}\end{center}
-\newpage
-% ---------- P13 NUBE ----------
+% ---------- NUBE ----------
 \section{Datos en la nube (Criterio 10)}
 \begin{center}
 \begin{minipage}{0.55\linewidth}
@@ -299,9 +275,7 @@ y frentes de apoyo. La app suma gauge, donut, histograma de lotes y banda $\pm$M
 \end{minipage}
 \end{center}
 Re-entrenar = regenerar el JSON y republicar el HTML; el self-test 5/5 valida cada despliegue.
-\vfill\begin{center}\textit{Página 13 de 16 · Nube}\end{center}
-\newpage
-% ---------- P14 DESPLIEGUE ----------
+% ---------- DESPLIEGUE ----------
 \section{Despliegue (CRISP-DM 6)}
 \texttt{Despligue/app\_flete.html}: doble clic, sin internet, theme oscuro. Cuatro pestañas:
 \begin{enumerate}[leftmargin=*]
@@ -311,9 +285,7 @@ Re-entrenar = regenerar el JSON y republicar el HTML; el self-test 5/5 valida ca
 \item \textbf{Monitoreo:} deriva $>15\%$, registro v1, plan de mantenimiento y riesgos conocidos.
 \end{enumerate}
 Archivo de prueba: \texttt{Despligue/datos\_prueba\_fletes.csv} (12 envíos con costo; MAE simulado $\approx$\$9.5, estado ``sano'').
-\vfill\begin{center}\textit{Página 14 de 16 · Despliegue}\end{center}
-\newpage
-% ---------- P15 MONITOREO ----------
+% ---------- MONITOREO ----------
 \section{Monitoreo y mantenimiento (CRISP-DM 6)}
 \begin{center}
 {\small
@@ -329,9 +301,7 @@ Esquema Bronce & columnas nuevas & Regenerar JSON + self-test 5/5 \\
 \textbf{Riesgos vigilados:} ventas 2025 contaminadas (topes $<5000$/\,$<\$2000$),
 contrato 1 e IDs basura, fechas 1990/2099, voltaje IoT constante 3.3.
 \textbf{Registro:} v1 (29/9) Ridge $\alpha{=}0.1$, MAE \$26.55, $R^2$ 0.905, sklearn 1.8.0.
-\vfill\begin{center}\textit{Página 15 de 16 · Monitoreo}\end{center}
-\newpage
-% ---------- P16 CIERRE ----------
+% ---------- CIERRE ----------
 \section{Cierre, futuro y anexos}
 \begin{multicols}{2}
 \textbf{Conclusión:} cumple las tres metas, generaliza en test cronológico y opera
@@ -350,5 +320,4 @@ $\approx$800 ventas 2025 · fechas 1990/2099 · inventario $\gg$ capacidad · Io
 \textbf{Glosario:} MAE = error absoluto medio (USD). $R^2$ = varianza explicada.
 MAPE = error \%. Deriva = cambio de distribución vs train.
 \end{multicols}
-\vfill\begin{center}\textit{Página 16 de 16 · Cierre y anexos}\end{center}
 \end{document}
