@@ -134,8 +134,7 @@ $('btn-batch').addEventListener('click', () => {
   const f = $('file').files[0]; if (!f) return;
   const rd = new FileReader();
   rd.onload = () => {
-    const [head, ...rows] = rd.result.trim().split(/?
-/); const H = head.split(',').map(h => h.trim().toLowerCase());
+    const [head, ...rows] = rd.result.trim().split(/\r?\n/); const H = head.split(',').map(h => h.trim().toLowerCase());
     const need = ['distancia_km','duracion_h','capacidad_tn','mes','tipo','origen','destino','pais_bandera'];
     const miss = need.filter(c => !H.includes(c));
     if (miss.length){ $('batch-out').innerHTML = `<p class="bad">Faltan columnas: ${miss.join(', ')}</p>`; return; }
@@ -156,8 +155,7 @@ $('btn-batch').addEventListener('click', () => {
   rd.readAsText(f);
 });
 $('btn-dl').addEventListener('click', () => {
-  const H = Object.keys(lastBatch[0]); const csv = [H.join(',')].concat(lastBatch.map(r => H.map(h => r[h]).join(','))).join('
-');
+  const H = Object.keys(lastBatch[0]); const csv = [H.join(',')].concat(lastBatch.map(r => H.map(h => r[h]).join(','))).join('\n');
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'predicciones_flete.csv'; a.click();
 });
 // dashboards
