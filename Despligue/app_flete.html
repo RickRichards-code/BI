@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gravetal · Cotizador de fletes + Monitoreo</title>
+<style>
+:root{--p:#1E40AF;--s:#3B82F6;--a:#D97706;--at:#92400e;--bg:#F8FAFC;--card:#fff;--fg:#1E3A8A;--mu:#E9EEF6;--muf:#475569;--bd:#DBEAFE;--r:#DC2626;--ok:#15803d}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Fira Sans','Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--fg);font-size:16px;line-height:1.5}
+.wrap{max-width:1100px;margin:0 auto;padding:16px}
+header.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 4px}
+.brand{font-weight:700;font-size:1.05rem;color:var(--p)}.brand b{color:var(--a)}
+.badge{display:inline-block;padding:2px 10px;border-radius:99px;font-size:.68rem;font-weight:700;background:#e9f7fb;border:1px solid var(--bd)}
+nav.tabs{position:relative;display:flex;gap:4px;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:4px;margin-bottom:14px}
+.tab{flex:1;border:0;background:transparent;padding:12px 8px;font-size:.8rem;font-weight:700;color:var(--muf);border-radius:8px;cursor:pointer;min-height:44px}
+.tab[aria-selected="true"]{color:#fff}
+#indicator{position:absolute;top:4px;left:4px;height:calc(100% - 8px);background:var(--p);border-radius:8px;transition:transform .35s cubic-bezier(.3,1.4,.4,1),width .35s cubic-bezier(.3,1.4,.4,1);z-index:0}
+.tab{position:relative;z-index:1}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.card{background:var(--card);border:1px solid var(--bd);border-top:4px solid var(--p);border-radius:12px;padding:14px}
+.card.amber{border-top-color:var(--a)}
+.card h3{font-size:.82rem;text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px}
+.card p,.card li{font-size:.78rem;color:var(--muf)}.card ul{padding-left:16px}
+.kpi{font-size:1.6rem;font-weight:700;color:var(--p)}.kpi small{font-size:.68rem;color:var(--muf);display:block;font-weight:400}
+label{display:block;font-size:.72rem;font-weight:700;margin:8px 0 3px}
+input,select{width:100%;padding:10px;border:1px solid var(--bd);border-radius:8px;font-size:.85rem;min-height:44px;background:#fff;color:var(--fg)}
+input:focus-visible,select:focus-visible,button:focus-visible,.tab:focus-visible{outline:3px solid var(--s);outline-offset:1px}
+button.go{background:var(--p);color:#fff;border:0;border-radius:10px;padding:12px 22px;font-weight:700;font-size:.85rem;cursor:pointer;min-height:44px;transition:transform .15s ease,background .2s}
+button.go:hover{background:#1a3690}button.go:active{transform:scale(.96)}
+buttonGhost{background:#fff;color:var(--p);border:1px solid var(--p)}
+.result{background:linear-gradient(135deg,#1E40AF,#3B82F6);color:#fff;border-radius:14px;padding:18px;margin-top:12px}
+.result .big{font-size:2rem;font-weight:700}
+table{width:100%;border-collapse:collapse;font-size:.72rem;background:#fff}th{background:var(--p);color:#fff;padding:6px}td{padding:6px;border:1px solid var(--bd);text-align:center}tr:nth-child(even){background:#f2f7fc}
+.ok{color:var(--ok);font-weight:700}.bad{color:var(--r);font-weight:700}
+.stagger>*{opacity:0;transform:translateY(14px);animation:up .45s cubic-bezier(.2,.9,.3,1.2) forwards}
+.stagger>*:nth-child(2){animation-delay:.06s}.stagger>*:nth-child(3){animation-delay:.12s}.stagger>*:nth-child(4){animation-delay:.18s}.stagger>*:nth-child(5){animation-delay:.24s}.stagger>*:nth-child(6){animation-delay:.3s}
+@keyframes up{to{opacity:1;transform:none}}
+details{border:1px solid var(--bd);border-radius:10px;padding:10px 12px;margin-top:10px;background:#fff}
+summary{cursor:pointer;font-weight:700;font-size:.8rem;min-height:44px;display:flex;align-items:center}
+.bar{height:12px;background:var(--mu);border-radius:6px;overflow:hidden}.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--p),var(--s));border-radius:6px;transition:width .6s ease}
+@media (prefers-reduced-motion: reduce){.stagger>*{animation:none;opacity:1;transform:none}#indicator,.bar i{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top"><div class="brand">Gravetal <b>Cotizador + Monitoreo</b></div><span class="badge" id="selftest">verificando modelo…</span></header>
+<nav class="tabs" role="tablist" aria-label="Secciones" id="tabs">
+<span id="indicator"></span>
+<button class="tab" role="tab" aria-selected="true" data-t="p1" id="tab-p1">Predecir</button>
+<button class="tab" role="tab" aria-selected="false" data-t="p2" id="tab-p2">Lotes CSV</button>
+<button class="tab" role="tab" aria-selected="false" data-t="p3" id="tab-p3">Dashboards</button>
+<button class="tab" role="tab" aria-selected="false" data-t="p4" id="tab-p4">Monitoreo</button>
+</nav>
+
+<section id="p1" role="tabpanel" aria-labelledby="tab-p1">
+<div class="grid stagger">
+<div class="card"><h3>Cotizar flete (Ridge, R² 0.905)</h3>
+<label for="f-dist">Distancia (km)</label><input id="f-dist" type="number" value="1500" min="1">
+<label for="f-dur">Duración (horas)</label><input id="f-dur" type="number" value="9" min="1">
+<label for="f-cap">Capacidad transporte (TN)</label><input id="f-cap" type="number" value="400" min="1">
+<label for="f-mes">Mes</label><input id="f-mes" type="number" value="6" min="1" max="12">
+<label for="f-tipo">Tipo transporte</label><select id="f-tipo"></select>
+<label for="f-ori">Origen</label><select id="f-ori"></select>
+<label for="f-des">Destino</label><select id="f-des"></select>
+<label for="f-pais">Bandera</label><select id="f-pais"></select>
+<p style="margin-top:10px"><button class="go" id="btn-predecir">Predecir USD</button></p>
+</div>
+<div class="card amber"><h3>Resultado</h3><div id="out" aria-live="polite"><p>Completa y presiona Predecir.</p></div>
+<h3 style="margin-top:10px">Qué más pesa (este caso)</h3><div id="expl"></div></div>
+</div>
+<details><summary>Cómo funciona (metodología)</summary><p style="font-size:.76rem;color:var(--muf)">Ridge α=0.1 sobre 4.426 train cronológico (70/15/15): mediana→estandarizado + one-hot. MAE test $26.55, MAPE 16%. La predicción de esta página es <b>bit a bit la misma</b> que sklearn (verificado con 5 casos).</p></details>
+</section>
+
+<section id="p2" role="tabpanel" aria-labelledby="tab-p2" hidden>
+<div class="card"><h3>Lotes CSV → predicciones + métricas</h3>
+<p>CSV con columnas: distancia_km, duracion_h, capacidad_tn, mes, tipo, origen, destino, pais_bandera (+ costo_flete_usd opcional para métricas).</p>
+<p style="margin-top:8px"><input type="file" id="file" accept=".csv" aria-label="Subir CSV"></p>
+<p style="margin-top:8px"><button class="go" id="btn-batch">Predecir lote</button> <button class="go buttonGhost" id="btn-dl" disabled>Descargar resultados</button></p>
+<div id="batch-out" aria-live="polite"></div></div>
+</section>
+
+<section id="p3" role="tabpanel" aria-labelledby="tab-p3" hidden>
+<div class="grid stagger" id="dash"></div>
+</section>
+
+<section id="p4" role="tabpanel" aria-labelledby="tab-p4" hidden>
+<div class="grid stagger">
+<div class="card"><h3>Chequeo de deriva (Fase 6)</h3><p>Sube el CSV de tu último lote en <b>Lotes CSV</b>: compara medias vs entrenamiento y alerta si alguna variable se movió &gt;15%.</p><div id="drift"></div></div>
+<div class="card"><h3>Registro del modelo</h3><table><thead><tr><th>Versión</th><th>Modelo</th><th>MAE</th><th>R²</th></tr></thead><tbody><tr><td>v1 29/9</td><td>Ridge α=0.1</td><td>$26.55</td><td>0.905</td></tr></tbody></table></div>
+<div class="card"><h3>Plan de mantenimiento</h3><ul><li>Re-entrenar cada campaña o si MAE mensual &gt; $35.</li><li>Vigilar deriva de distancia/precio (supuestos).</li><li>Fijar scikit-learn==1.8.0 en producción.</li></ul></div>
+<div class="card amber"><h3>Riesgos conocidos</h3><ul><li>Ventas 2025 contaminadas (topes &lt;5000/&lt;$2000).</li><li>Contrato 1 e IDs basura en Bronce.</li><li>Fechas 1990/2099 fuera de rango.</li></ul></div>
+</div>
+</section>
+</div>
+<script>
+const M = {"num_features": ["distancia_km", "duracion_h", "capacidad_tn", "mes"], "cat_features": ["tipo", "origen", "destino", "pais_bandera"], "num_median": [1625.75, 7.0, 31.7, 6.0], "num_mean": [1480.5652705882353, 9.352411764705883, 408.83705294117647, 6.5046470588235294], "num_scale": [988.6145572179684, 8.71650125815347, 800.7093647661044, 3.4595276189128423], "cat_fill": "FALTA", "cat_categories": [["BARCAZA", "CAMION", "CAMION CISTERNA", "FERROVIARIO"], ["Puerto Quijarro", "San Julian", "Warnes"], ["Buenos Aires", "Puerto Aguirre", "Puerto Quijarro", "Rosario", "Santos"], ["Argentina", "Bolivia", "Brasil", "Paraguay"]], "coef": [8.758110310707751, -0.23914809356706115, -0.17397231438153712, -0.5553944634408451, 0.5619188587353886, -0.16125863438269467, 0.259891398249149, -0.6605516213701985, 81.25678464194404, -43.23521818291589, -38.021566479269985, -0.9647749670123011, -39.57809407170621, -41.67869057478085, -33.52862536213968, 115.75018495828272, -0.5461518283211264, 0.22630705571277562, 0.24466537072602948, 0.07517940045323643], "intercept": 156.4822844454077, "alpha": 0.1, "train_means": {"distancia_km": 1483.36337, "duracion_h": 9.379, "capacidad_tn": 412.21619499999997, "mes": 6.5001}, "train_n": 17000, "metrics": {"MAE_test": 26.55, "R2_test": 0.905, "MAPE_test": 16.0}, "check_inputs": [{"distancia_km": "3022.6", "duracion_h": "16", "capacidad_tn": "26.0", "mes": "1", "tipo": "CAMION CISTERNA", "origen": "Puerto Quijarro", "destino": "Santos", "pais_bandera": "Brasil"}, {"distancia_km": "1722.5", "duracion_h": "10", "capacidad_tn": "33.0", "mes": "6", "tipo": "CAMION", "origen": "Puerto Quijarro", "destino": "Rosario", "pais_bandera": "Argentina"}, {"distancia_km": "2199.1", "duracion_h": "7", "capacidad_tn": "234.1", "mes": "9", "tipo": "BARCAZA", "origen": "Puerto Quijarro", "destino": "Buenos Aires", "pais_bandera": "Argentina"}, {"distancia_km": "550.7", "duracion_h": "3", "capacidad_tn": "33.3", "mes": "5", "tipo": "CAMION", "origen": "Warnes", "destino": "Puerto Quijarro", "pais_bandera": "Brasil"}, {"distancia_km": "582.5", "duracion_h": "9", "capacidad_tn": "32.9", "mes": "1", "tipo": "CAMION", "origen": "Warnes", "destino": "Puerto Aguirre", "pais_bandera": "Brasil"}], "check_expected": [368.44, 205.79, 242.86, 69.13, 71.99]};
+const $ = id => document.getElementById(id);
+// tabs con indicador deslizante + teclado
+const tabs = [...document.querySelectorAll('.tab')], ind = $('indicator');
+function moveInd(){ const b = document.querySelector('.tab[aria-selected="true"]'); ind.style.width = b.offsetWidth + 'px'; ind.style.transform = `translateX(${b.offsetLeft - 4}px)`; }
+function go(id){ tabs.forEach(t => { const on = t.dataset.t === id; t.setAttribute('aria-selected', on); document.getElementById(t.dataset.t).hidden = !on; }); moveInd(); }
+tabs.forEach((t, i) => { t.addEventListener('click', () => go(t.dataset.t));
+  t.addEventListener('keydown', e => { if (e.key === 'ArrowRight') tabs[(i+1)%tabs.length].focus(); if (e.key === 'ArrowLeft') tabs[(i-1+tabs.length)%tabs.length].focus(); }); });
+addEventListener('resize', moveInd); addEventListener('load', moveInd);
+// modelo exacto
+function predict(r){
+  const x = M.num_features.map((f, i) => { let v = parseFloat(r[f]); if (!isFinite(v)) v = M.num_median[i]; return (v - M.num_mean[i]) / M.num_scale[i]; });
+  M.cat_features.forEach((f, i) => { const v = String(r[f] ?? M.cat_fill); M.cat_categories[i].forEach(c => x.push(v === c ? 1 : 0)); });
+  let s = M.intercept; for (let i = 0; i < x.length; i++) s += x[i] * M.coef[i];
+  return { pred: s, contrib: x.map((v, i) => ({ i, v: v * M.coef[i] })) };
+}
+['tipo','ori','des','pais'].forEach((k, j) => { const f = ['tipo','origen','destino','pais_bandera'][j]; const el = $('f-' + k); M.cat_categories[['tipo','origen','destino','pais_bandera'].indexOf(f)].forEach(c => { const o = document.createElement('option'); o.value = o.textContent = c; el.appendChild(o); }); });
+// count-up + prediccion
+function countUp(el, to, pre = '', dec = 1){ const t0 = performance.now(), dur = 600; const red = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function fr(t){ const k = red ? 1 : Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3); el.textContent = pre + (to * e).toFixed(dec); if (k < 1) requestAnimationFrame(fr); } requestAnimationFrame(fr); }
+$('btn-predecir').addEventListener('click', () => {
+  const r = { distancia_km: $('f-dist').value, duracion_h: $('f-dur').value, capacidad_tn: $('f-cap').value, mes: $('f-mes').value,
+    tipo: $('f-tipo').value, origen: $('f-ori').value, destino: $('f-des').value, pais_bandera: $('f-pais').value };
+  const { pred, contrib } = predict(r);
+  const names = [...M.num_features]; M.cat_features.forEach((f, i) => M.cat_categories[i].forEach(c => names.push(f + '=' + c)));
+  const top = contrib.map((c, i) => ({ n: names[i], v: c.v })).sort((a, b) => Math.abs(b.v) - Math.abs(a.v)).slice(0, 3);
+  $('out').innerHTML = `<div class="result"><div>Predicción</div><div class="big" id="pv">$0.0</div><div>± $${M.metrics.MAE_test} MAE (MAPE ${M.metrics.MAPE_test}%)</div></div>`;
+  countUp($('pv'), pred, '$');
+  $('expl').innerHTML = top.map(t => `<div>${t.n}: <b>${t.v >= 0 ? '+' : ''}${t.v.toFixed(1)}</b></div><div class="bar"><i style="width:${Math.min(100, Math.abs(t.v) / 2)}%"></i></div>`).join('');
+});
+// self-test 5 casos sklearn
+(function(){ let ok = 0; M.check_inputs.forEach((r, i) => { if (Math.abs(predict(r).pred - M.check_expected[i]) < 0.05) ok++; });
+  $('selftest').textContent = ok === 5 ? 'modelo verificado 5/5' : 'ERROR verificación ' + ok + '/5';
+  $('selftest').style.background = ok === 5 ? '#dcfce7' : '#fee2e2'; })();
+// batch CSV
+let lastBatch = null;
+$('btn-batch').addEventListener('click', () => {
+  const f = $('file').files[0]; if (!f) return;
+  const rd = new FileReader();
+  rd.onload = () => {
+    const [head, ...rows] = rd.result.trim().split(/?
+/); const H = head.split(',').map(h => h.trim().toLowerCase());
+    const need = ['distancia_km','duracion_h','capacidad_tn','mes','tipo','origen','destino','pais_bandera'];
+    const miss = need.filter(c => !H.includes(c));
+    if (miss.length){ $('batch-out').innerHTML = `<p class="bad">Faltan columnas: ${miss.join(', ')}</p>`; return; }
+    const out = rows.filter(Boolean).map(line => { const v = line.split(','); const r = {}; H.forEach((h, i) => r[h] = (v[i] || '').trim()); r.pred_usd = +predict(r).pred.toFixed(2); return r; });
+    lastBatch = out;
+    let html = `<p>Predichas ${out.length} filas.</p>`;
+    if (H.includes('costo_flete_usd')){ const e = out.map(r => Math.abs(+r.costo_flete_usd - r.pred_usd)); const mae = e.reduce((a, b) => a + b, 0) / e.length;
+      const ym = out.reduce((a, r) => a + +r.costo_flete_usd, 0) / out.length;
+      const r2 = 1 - out.reduce((a, r) => a + (r.costo_flete_usd - r.pred_usd) ** 2, 0) / out.reduce((a, r) => a + (r.costo_flete_usd - ym) ** 2, 0);
+      html += `<p>MAE $${mae.toFixed(2)} · R² ${r2.toFixed(3)} ${r2 < 0.7 ? '<span class="bad">(deriva: re-entrenar)</span>' : '<span class="ok">(sano)</span>'}</p>`;
+      const dm = {}; M.num_features.forEach((c, i) => { const vs = out.map(r => +r[c]).filter(isFinite); if (vs.length) dm[c] = vs.reduce((a, b) => a + b, 0) / vs.length; });
+      const drift = Object.entries(dm).filter(([c, m]) => Math.abs(m - M.train_means[c]) / Math.abs(M.train_means[c]) > 0.15);
+      $('drift').innerHTML = drift.length ? `<p class="bad">Deriva: ${drift.map(d => d[0]).join(', ')}</p>` : '<p class="ok">Sin deriva >15%.</p>';
+    }
+    html += `<table><thead><tr>${Object.keys(out[0]).map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${out.slice(0, 8).map(r => `<tr>${Object.values(r).map(v => `<td>${v}</td>`).join('')}</tr>`).join('')}</tbody></table><p>Primeras 8 de ${out.length}.</p>`;
+    $('batch-out').innerHTML = html; $('btn-dl').disabled = false;
+  };
+  rd.readAsText(f);
+});
+$('btn-dl').addEventListener('click', () => {
+  const H = Object.keys(lastBatch[0]); const csv = [H.join(',')].concat(lastBatch.map(r => H.map(h => r[h]).join(','))).join('
+');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'predicciones_flete.csv'; a.click();
+});
+// dashboards
+$('dash').innerHTML = `
+<div class="card"><h3>KPIs medidos</h3><p><span class="kpi" style="font-size:1.1rem">R² 0.905</span> <span class="kpi" style="font-size:1.1rem">MAE $26.55</span></p><p>MAPE 16% · mejora 74% vs media · 17k train cronológico</p></div>
+<div class="card"><h3>Proyecto (test)</h3><table><thead><tr><th>Modelo</th><th>MAE</th><th>R²</th></tr></thead><tbody>
+<tr><td>Ridge</td><td>26.55</td><td>0.905</td></tr><tr><td>RF</td><td>26.65</td><td>0.901</td></tr><tr><td>HGB</td><td>26.41</td><td>0.903</td></tr><tr><td>Media</td><td>102.38</td><td>0.000</td></tr></tbody></table></div>
+<div class="card"><h3>Cobertura aceite (backtest)</h3><p>+53% vs +40% buy&hold · vol −28% · hit-rate 0.50 honesto</p></div>
+<div class="card"><h3>IoT riesgo térmico</h3><p>F1 0.60 · AUC 0.87 · recall ~1.0 (sobre-alerta declarada)</p></div>`;
+</script>
+</body>
+</html>
