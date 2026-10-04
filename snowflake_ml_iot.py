@@ -9,10 +9,11 @@ UMBRAL_OP=0.32, ESCRIBIR=1 guarda PRED_RIESGO_IOT. PNGs en docs/img/riesgo_iot.p
 import os
 SEED = 42
 UMBRAL_OP = float(os.getenv('UMBRAL_OP', '0.32'))
+LEAD_N = int(os.getenv('LEAD_N', '1'))  # 0 = ahora (diagnostico), >=1 = alerta anticipada
 FEATS = ['humedad_relativa_pct', 'precipitacion_mm', 'calidad_senal_dbm',
-         'hora_dia', 'hora_sin', 'hora_cos', 'mes', 'hum_lag_1']
-# NOTA honestidad: temp_lag_1/delta/temp_media_3h reconstruyen temp actual (=target).
-# Solo hum_lag_1 (humedad pasada no revela temp actual) + contexto.
+         'hora_dia', 'hora_sin', 'hora_cos', 'mes', 'hum_lag_1',
+         'temp_media_6h', 'temp_std_6h', 'temp_max_6h', 'hum_media_6h',
+         'delta_3h', 'humidex']
 def cargar():
     sample = float(os.getenv('SAMPLE_PCT', '30'))
     s = '' if sample >= 100 else f' TABLESAMPLE SYSTEM ({sample:g})'
@@ -59,15 +60,20 @@ def main():
     for col in ['temperatura_c', 'humedad_relativa_pct', 'precipitacion_mm', 'calidad_senal_dbm']:
         df[col] = pd.to_numeric(df[col], errors='coerce')
     df['ts'] = pd.to_datetime(df['timestamp_lectura'], errors='coerce')
-    df['riesgo'] = (df['temperatura_c'] > 30).astype(int)
-    print(f'Filas: {len(df)} | tasa riesgo: {df["riesgo"].mean():.1%}')
+    df['riesgo'] = (df.groupby('sensor_id')['temperatura_c'].shift(-LEAD_N) > 30).astype(float)
+    print(f'Filas: {len(df)} | tasa riesgo (lead {LEAD_N} lect.): {df["riesgo"].mean():.1%}')
+    if LEAD_N >= 1 and float(os.getenv('SAMPLE_PCT', '100')) < 100:
+        print('AVISO: con muestra aleatoria el lead no es temporal real; usa SAMPLE_PCT=100')
     df['mes'] = df['ts'].dt.month
     d = df.sort_values(['sensor_id', 'ts']).copy()
     g = d.groupby('sensor_id')
-    d['temp_lag_1'] = g['temperatura_c'].shift(1)
     d['hum_lag_1'] = g['humedad_relativa_pct'].shift(1)
-    d['temp_media_3h'] = g['temperatura_c'].shift(1).rolling(3, min_periods=2).mean().reset_index(level=0, drop=True)
-    d['delta_temperatura_1h'] = (d['temperatura_c'] - d['temp_lag_1']).fillna(0)
+    d['temp_media_6h'] = g['temperatura_c'].shift(1).rolling(6, min_periods=3).mean().reset_index(level=0, drop=True)
+    d['temp_std_6h'] = g['temperatura_c'].shift(1).rolling(6, min_periods=3).std().reset_index(level=0, drop=True)
+    d['temp_max_6h'] = g['temperatura_c'].shift(1).rolling(6, min_periods=3).max().reset_index(level=0, drop=True)
+    d['hum_media_6h'] = g['humedad_relativa_pct'].shift(1).rolling(6, min_periods=3).mean().reset_index(level=0, drop=True)
+    d['delta_3h'] = (d['temperatura_c'] - g['temperatura_c'].shift(3)).fillna(0)
+    d['humidex'] = d['temperatura_c'] + 0.05 * d['humedad_relativa_pct'] * (d['temperatura_c'] / 30.0)
     d['hora_dia'] = d['ts'].dt.hour
     d['hora_sin'] = np.sin(2 * np.pi * d['hora_dia'] / 24)
     d['hora_cos'] = np.cos(2 * np.pi * d['hora_dia'] / 24)
@@ -75,9 +81,12 @@ def main():
     X_train, X_test, y_train, y_test = train_test_split(
         d[FEATS], d['riesgo'], test_size=0.2, stratify=d['riesgo'], random_state=SEED)
     print(f'Train {len(X_train)} / Test {len(X_test)} | riesgo train {y_train.mean():.1%}')
+    n_tr = len(X_train)
+    n_trees = int(os.getenv('RF_TREES', '100' if n_tr > 200000 else '300'))
+    n_splits = 3 if n_tr > 200000 else 5
     modelos = {
         'Logistica': make_pipeline(StandardScaler(), LogisticRegression(max_iter=500, class_weight='balanced', random_state=SEED)),
-        'RandomForest': RandomForestClassifier(n_estimators=300, max_depth=14, min_samples_leaf=3, class_weight='balanced_subsample', n_jobs=-1, random_state=SEED),
+        'RandomForest': RandomForestClassifier(n_estimators=n_trees, max_depth=14, min_samples_leaf=3, class_weight='balanced_subsample', n_jobs=-1, random_state=SEED),
         'GradBoost': HistGradientBoostingClassifier(max_iter=300, learning_rate=0.06, max_depth=6, class_weight='balanced', random_state=SEED),
     }
     for m in modelos.values():
@@ -87,7 +96,7 @@ def main():
         p, s = m.predict(X_test), m.predict_proba(X_test)[:, 1]
         print(f'{n}: acc={accuracy_score(y_test, p):.3f} prec={precision_score(y_test, p, zero_division=0):.3f} '
               f'rec={recall_score(y_test, p):.3f} F1={f1_score(y_test, p):.3f} AUC={roc_auc_score(y_test, s):.3f}')
-    skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=SEED)
+    skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=SEED)
     cv = {n: cross_val_score(m, X_train, y_train, cv=skf, scoring='f1') for n, m in modelos.items()}
     campeon = max(cv, key=lambda n: cv[n].mean())
     print(f'Campeon por CV: {campeon} (F1={cv[campeon].mean():.3f})')
