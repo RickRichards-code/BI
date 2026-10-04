@@ -88,6 +88,7 @@ def main():
         'Logistica': make_pipeline(StandardScaler(), LogisticRegression(max_iter=500, class_weight='balanced', random_state=SEED)),
         'RandomForest': RandomForestClassifier(n_estimators=n_trees, max_depth=14, min_samples_leaf=3, class_weight='balanced_subsample', n_jobs=-1, random_state=SEED),
         'GradBoost': HistGradientBoostingClassifier(max_iter=300, learning_rate=0.06, max_depth=6, class_weight='balanced', random_state=SEED),
+        'HGB': HistGradientBoostingClassifier(max_iter=200, learning_rate=0.08, random_state=SEED),
     }
     for m in modelos.values():
         m.fit(X_train, y_train)
